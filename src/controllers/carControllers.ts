@@ -2,6 +2,25 @@ import { Response } from "express";
 import { AuthRequest } from "../middleware/protectRoute";
 import prisma from "../lib/prisma";
 
+export const getAllAdminsCars = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized - User not authenticated" });
+    }
+
+    const cars = await prisma.car.findMany({
+      where: { userId: req.user.id },
+    });
+
+    res.status(200).json({ cars });
+  } catch (error) {
+    console.error("Error fetching cars:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export const createCar = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -68,10 +87,14 @@ export const deleteCar = async (req: AuthRequest, res: Response) => {
 export const updateCar = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: "Unauthorized - User is not authenticated" });
+      return res
+        .status(401)
+        .json({ error: "Unauthorized - User is not authenticated" });
     }
 
-    const car = await prisma.car.findUnique({ where: { id: req.params.id as string } });
+    const car = await prisma.car.findUnique({
+      where: { id: req.params.id as string },
+    });
 
     if (!car) return res.status(404).json({ error: "Car not found" });
 
@@ -80,8 +103,13 @@ export const updateCar = async (req: AuthRequest, res: Response) => {
 
     const { brand, model, year, price, images } = req.body;
 
-    if (images !== undefined && (!Array.isArray(images) || images.length < 1 || images.length > 4)) {
-      return res.status(400).json({ error: "Car must have between 1 and 4 images" });
+    if (
+      images !== undefined &&
+      (!Array.isArray(images) || images.length < 1 || images.length > 4)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Car must have between 1 and 4 images" });
     }
 
     const updatedCar = await prisma.car.update({
