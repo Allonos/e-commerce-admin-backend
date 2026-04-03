@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { AuthRequest } from "../middleware/protectRoute";
 import prisma from "../lib/prisma";
 import cloudinary from "../lib/cloudinary";
@@ -195,7 +195,7 @@ export const updateCar = async (req: AuthRequest, res: Response) => {
         ...(model !== undefined && { model }),
         ...(year !== undefined && { year }),
         ...(location !== undefined && { location }),
-        ...(price !== undefined && { price }),
+        ...(price !== undefined && { price: parseFloat(price) }),
         ...(updatedImages !== undefined && { images: updatedImages }),
       },
     });
@@ -211,6 +211,24 @@ export const updateCar = async (req: AuthRequest, res: Response) => {
     res.json({ car: updatedCar });
   } catch (error) {
     console.error("Error updating car:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getCarById = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user)
+      return res
+        .status(401)
+        .json({ error: "Unauthorized - User is not authenticated" });
+
+    const { id } = req.params;
+    const car = await prisma.car.findUnique({ where: { id: id as string } });
+    if (!car) return res.status(404).json({ error: "Car not found" });
+
+    res.json({ car });
+  } catch (error) {
+    console.error("Error fetching car:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
