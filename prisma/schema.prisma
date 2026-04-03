@@ -19,11 +19,11 @@ model User {
 
 model Car {
   id        String   @id @default(uuid())
-  brand     String   @db.VarChar(255)
   model     String   @db.VarChar(255)
-  year      Int
+  year      String   @db.VarChar(255)
   price     Float
   images    String[]
+  location  String   @db.VarChar(255)
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())

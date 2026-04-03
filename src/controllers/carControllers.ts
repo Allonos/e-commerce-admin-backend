@@ -1,6 +1,13 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/protectRoute";
 import prisma from "../lib/prisma";
+import cloudinary from "../lib/cloudinary";
+
+const getCloudinaryPublicId = (url: string): string => {
+  const afterUpload = url.split("/upload/")[1];
+  const withoutVersion = afterUpload.replace(/^v\d+\//, "");
+  return withoutVersion.replace(/\.[^/.]+$/, "");
+};
 
 export const getAllAdminsCars = async (req: AuthRequest, res: Response) => {
   try {
@@ -29,25 +36,52 @@ export const createCar = async (req: AuthRequest, res: Response) => {
         .json({ error: "Unauthorized - User not authenticated" });
     }
 
-    const { brand, model, year, price, images } = req.body;
+    const { model, year, price, location } = req.body;
+    const files = req.files as Express.Multer.File[];
 
-    if (!brand || !model || !year || !price || !images) {
+    if (
+      !model ||
+      !year ||
+      !price ||
+      !location ||
+      !files ||
+      files.length === 0
+    ) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    if (!Array.isArray(images) || images.length < 1 || images.length > 4) {
+    if (files.length > 4) {
       return res
         .status(400)
         .json({ error: "Car must have between 1 and 4 images" });
     }
 
+    const imageUrls = await Promise.all(
+      files.map(
+        (file) =>
+          new Promise<string>((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              { resource_type: "image" },
+              (error, result) => {
+                if (error || !result) {
+                  reject(error);
+                } else {
+                  resolve(result.secure_url);
+                }
+              },
+            );
+            stream.end(file.buffer);
+          }),
+      ),
+    );
+
     const newCar = await prisma.car.create({
       data: {
-        brand,
         model,
         year,
-        price,
-        images,
+        price: parseFloat(price),
+        location,
+        images: imageUrls,
         userId: req.user.id,
       },
     });
@@ -77,6 +111,15 @@ export const deleteCar = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: "Unauthorized" });
 
     await prisma.car.delete({ where: { id: req.params.id as string } });
+
+    if (car.images.length > 0) {
+      await Promise.all(
+        car.images.map((url) =>
+          cloudinary.uploader.destroy(getCloudinaryPublicId(url)),
+        ),
+      );
+    }
+
     res.json({ message: "Car deleted", car });
   } catch (error) {
     console.error("Error deleting car:", error);
@@ -101,27 +144,69 @@ export const updateCar = async (req: AuthRequest, res: Response) => {
     if (car.userId !== req.user.id)
       return res.status(403).json({ error: "Unauthorized" });
 
-    const { brand, model, year, price, images } = req.body;
+    const { model, year, location, price, existingImages } = req.body;
+    const files = req.files as Express.Multer.File[] | undefined;
 
-    if (
-      images !== undefined &&
-      (!Array.isArray(images) || images.length < 1 || images.length > 4)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Car must have between 1 and 4 images" });
+    let updatedImages: string[] | undefined;
+    let removedImages: string[] = [];
+
+    if (files?.length || existingImages !== undefined) {
+      const keptImages: string[] = existingImages
+        ? Array.isArray(existingImages)
+          ? existingImages
+          : [existingImages]
+        : [];
+
+      removedImages = car.images.filter((url) => !keptImages.includes(url));
+
+      const newImageUrls = files?.length
+        ? await Promise.all(
+            files.map(
+              (file) =>
+                new Promise<string>((resolve, reject) => {
+                  const stream = cloudinary.uploader.upload_stream(
+                    { resource_type: "image" },
+                    (error, result) => {
+                      if (error || !result) {
+                        reject(error);
+                      } else {
+                        resolve(result.secure_url);
+                      }
+                    },
+                  );
+                  stream.end(file.buffer);
+                }),
+            ),
+          )
+        : [];
+
+      updatedImages = [...keptImages, ...newImageUrls];
+
+      if (updatedImages.length < 1 || updatedImages.length > 4) {
+        return res
+          .status(400)
+          .json({ error: "Car must have between 1 and 4 images" });
+      }
     }
 
     const updatedCar = await prisma.car.update({
       where: { id: req.params.id as string },
       data: {
-        ...(brand !== undefined && { brand }),
         ...(model !== undefined && { model }),
         ...(year !== undefined && { year }),
+        ...(location !== undefined && { location }),
         ...(price !== undefined && { price }),
-        ...(images !== undefined && { images }),
+        ...(updatedImages !== undefined && { images: updatedImages }),
       },
     });
+
+    if (removedImages.length > 0) {
+      await Promise.all(
+        removedImages.map((url) =>
+          cloudinary.uploader.destroy(getCloudinaryPublicId(url)),
+        ),
+      );
+    }
 
     res.json({ car: updatedCar });
   } catch (error) {
