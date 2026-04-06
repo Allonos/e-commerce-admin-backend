@@ -19,6 +19,8 @@ model User {
 
 model Car {
   id        String   @id @default(uuid())
+  type      String   @db.VarChar(255)
+  makes     String   @db.VarChar(255)
   model     String   @db.VarChar(255)
   year      String   @db.VarChar(255)
   price     Float

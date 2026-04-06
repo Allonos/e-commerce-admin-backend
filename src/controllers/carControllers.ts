@@ -41,10 +41,12 @@ export const createCar = async (req: AuthRequest, res: Response) => {
         .json({ error: "Unauthorized - User not authenticated" });
     }
 
-    const { model, year, price, location } = req.body;
+    const { makes, type, model, year, price, location } = req.body;
     const files = req.files as Express.Multer.File[];
 
     if (
+      !makes ||
+      !type ||
       !model ||
       !year ||
       !price ||
@@ -82,6 +84,8 @@ export const createCar = async (req: AuthRequest, res: Response) => {
 
     const newCar = await prisma.car.create({
       data: {
+        makes,
+        type,
         model,
         year,
         price: parseFloat(price),
@@ -149,7 +153,7 @@ export const updateCar = async (req: AuthRequest, res: Response) => {
     if (car.userId !== req.user.id)
       return res.status(403).json({ error: "Unauthorized" });
 
-    const { model, year, location, price, existingImages } = req.body;
+    const { makes, type, model, year, location, price, existingImages } = req.body;
     const files = req.files as Express.Multer.File[] | undefined;
 
     let updatedImages: string[] | undefined;
@@ -197,6 +201,8 @@ export const updateCar = async (req: AuthRequest, res: Response) => {
     const updatedCar = await prisma.car.update({
       where: { id: req.params.id as string },
       data: {
+        ...(makes !== undefined && { makes }),
+        ...(type !== undefined && { type }),
         ...(model !== undefined && { model }),
         ...(year !== undefined && { year }),
         ...(location !== undefined && { location }),
