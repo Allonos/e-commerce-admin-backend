@@ -18,10 +18,15 @@ export const getAllAdminsCars = async (req: AuthRequest, res: Response) => {
     }
 
     const cars = await prisma.car.findMany({
-      where: { userId: req.user.id },
+      include: { user: { select: { username: true } } },
     });
 
-    res.status(200).json({ cars });
+    const formatted = cars.map(({ userId, user, ...car }) => ({
+      ...car,
+      owner: { id: userId, username: user.username },
+    }));
+
+    res.status(200).json({ cars: formatted });
   } catch (error) {
     console.error("Error fetching cars:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -223,10 +228,16 @@ export const getCarById = async (req: AuthRequest, res: Response) => {
         .json({ error: "Unauthorized - User is not authenticated" });
 
     const { id } = req.params;
-    const car = await prisma.car.findUnique({ where: { id: id as string } });
-    if (!car) return res.status(404).json({ error: "Car not found" });
+    const result = await prisma.car.findUnique({
+      where: { id: id as string },
+      include: { user: { select: { username: true } } },
+    });
+    if (!result) return res.status(404).json({ error: "Car not found" });
 
-    res.json({ car });
+    const { userId, user, ...car } = result;
+    res.json({
+      car: { ...car, owner: { id: userId, username: user.username } },
+    });
   } catch (error) {
     console.error("Error fetching car:", error);
     res.status(500).json({ error: "Internal server error" });
