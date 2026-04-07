@@ -2,9 +2,11 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import swaggerUi from "swagger-ui-express";
 
 import userRoutes from "./routes/userRoutes";
 import carRoutes from "./routes/carRoutes";
+import { swaggerSpec } from "./lib/swagger";
 
 dotenv.config();
 
@@ -20,6 +22,8 @@ app.use(
 
 app.use(express.json());
 app.use(cookieParser());
+
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/api/users", userRoutes);
 app.use("/api/cars", carRoutes);
