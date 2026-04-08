@@ -33,6 +33,9 @@ export const createUser = async (req: Request, res: Response) => {
     if (error instanceof Error && error.message === "EMAIL_IN_USE") {
       return res.status(409).json({ error: "Email already in use" });
     }
+    if (error instanceof Error && error.message === "USERNAME_IN_USE") {
+      return res.status(409).json({ error: "Username already in use" });
+    }
     console.error("Error creating user:", error);
     res.status(500).json({ error: "Internal server error" });
   }
