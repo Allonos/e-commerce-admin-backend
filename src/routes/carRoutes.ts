@@ -112,6 +112,7 @@ router.get("/", protectRoute, getAllAdminsCars);
 router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
 
 /**
+ *
  * @swagger
  * /api/cars/{id}:
  *   get:
