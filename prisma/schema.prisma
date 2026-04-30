@@ -23,6 +23,7 @@ model Car {
   makes     String   @db.VarChar(255)
   model     String   @db.VarChar(255)
   year      String   @db.VarChar(255)
+  lot       String   @unique @db.VarChar(255)
   price     Float
   images    String[]
   location  String   @db.VarChar(255)

@@ -7,6 +7,7 @@ interface CreateCarData {
   model: string;
   year: string;
   price: string;
+  lot: string;
   location: string;
   files: Express.Multer.File[] | undefined;
   userId: string;
@@ -23,6 +24,7 @@ interface UpdateCarData {
   price?: string;
   files?: Express.Multer.File[];
   existingImages?: string | string[];
+  lot?: string;
 }
 
 const getCloudinaryPublicId = (url: string): string => {
@@ -63,6 +65,7 @@ export const createCarService = async ({
   location,
   files,
   userId,
+  lot,
 }: CreateCarData) => {
   if (
     !makes ||
@@ -72,6 +75,7 @@ export const createCarService = async ({
     !price ||
     !location ||
     !files ||
+    !lot ||
     files.length === 0
   ) {
     throw new Error("All fields are required");
@@ -88,6 +92,7 @@ export const createCarService = async ({
       price: parseFloat(price),
       location,
       images: imageUrls,
+      lot,
       userId,
     },
   });
@@ -128,6 +133,7 @@ export const updateCarService = async ({
   location,
   price,
   files,
+  lot,
   existingImages,
 }: UpdateCarData) => {
   const car = await prisma.car.findUnique({ where: { id: carId } });
@@ -167,6 +173,7 @@ export const updateCarService = async ({
       ...(year !== undefined && { year }),
       ...(location !== undefined && { location }),
       ...(price !== undefined && { price: parseFloat(price) }),
+      ...(lot !== undefined && { lot }),
       ...(updatedImages !== undefined && { images: updatedImages }),
     },
   });
