@@ -32,7 +32,7 @@ export const createCar = async (req: AuthRequest, res: Response) => {
         .json({ error: "Unauthorized - User not authenticated" });
     }
 
-    const { makes, type, model, year, price, location } = req.body;
+    const { makes, type, model, year, price, location, lot } = req.body;
     const files = req.files as Express.Multer.File[];
 
     if (files.length > 4) {
@@ -49,6 +49,7 @@ export const createCar = async (req: AuthRequest, res: Response) => {
       price,
       location,
       files,
+      lot,
       userId: req.user.id,
     });
 
@@ -96,7 +97,7 @@ export const updateCar = async (req: AuthRequest, res: Response) => {
         .json({ error: "Unauthorized - User is not authenticated" });
     }
 
-    const { makes, type, model, year, location, price, existingImages } =
+    const { makes, type, model, year, location, price, lot, existingImages } =
       req.body;
     const files = req.files as Express.Multer.File[] | undefined;
 
@@ -111,6 +112,7 @@ export const updateCar = async (req: AuthRequest, res: Response) => {
       price,
       files,
       existingImages,
+      lot,
     });
 
     res.json({ car: updatedCar });
