@@ -58,6 +58,14 @@ export const createCar = async (req: AuthRequest, res: Response) => {
     if (error instanceof Error && error.message === "All fields are required") {
       return res.status(400).json({ error: "All fields are required" });
     }
+    if (
+      error instanceof Error &&
+      error.message === "A car with this lot already exists"
+    ) {
+      return res
+        .status(400)
+        .json({ error: "A car with this lot already exists" });
+    }
     console.error("Error creating car:", error);
     res.status(500).json({ error: "Internal server error" });
   }
@@ -127,6 +135,14 @@ export const updateCar = async (req: AuthRequest, res: Response) => {
       return res
         .status(400)
         .json({ error: "Car must have between 1 and 4 images" });
+    }
+    if (
+      error instanceof Error &&
+      error.message === "A car with this lot already exists"
+    ) {
+      return res
+        .status(400)
+        .json({ error: "A car with this lot already exists" });
     }
     console.error("Error updating car:", error);
     res.status(500).json({ error: "Internal server error" });

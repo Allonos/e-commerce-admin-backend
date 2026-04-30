@@ -81,6 +81,14 @@ export const createCarService = async ({
     throw new Error("All fields are required");
   }
 
+  const existingCarWithLot = await prisma.car.findUnique({
+    where: { lot },
+  });
+
+  if (existingCarWithLot) {
+    throw new Error("A car with this lot already exists");
+  }
+
   const imageUrls = await Promise.all(files.map(uploadToCloudinary));
 
   return prisma.car.create({
@@ -140,6 +148,13 @@ export const updateCarService = async ({
 
   if (!car) throw new Error("Car not found");
   if (car.userId !== userId) throw new Error("Unauthorized");
+
+  if (lot && lot !== car.lot) {
+    const existingCarWithLot = await prisma.car.findUnique({ where: { lot } });
+    if (existingCarWithLot) {
+      throw new Error("A car with this lot already exists");
+    }
+  }
 
   let updatedImages: string[] | undefined;
   let removedImages: string[] = [];
