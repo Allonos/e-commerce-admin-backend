@@ -45,15 +45,29 @@ const uploadToCloudinary = (file: Express.Multer.File): Promise<string> =>
     stream.end(file.buffer);
   });
 
-export const getAllAdminsCarsService = async () => {
-  const cars = await prisma.car.findMany({
-    include: { user: { select: { username: true } } },
-  });
+export const getAllAdminsCarsService = async ({
+  limit,
+  skip,
+}: {
+  limit: number;
+  skip: number;
+}) => {
+  const [rawCars, totalItems] = await Promise.all([
+    prisma.car.findMany({
+      include: { user: { select: { username: true } } },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.car.count(),
+  ]);
 
-  return cars.map(({ userId, user, ...car }) => ({
+  const cars = rawCars.map(({ userId, user, ...car }) => ({
     ...car,
     owner: { id: userId, username: user.username },
   }));
+
+  return { cars, totalItems };
 };
 
 export const createCarService = async ({
