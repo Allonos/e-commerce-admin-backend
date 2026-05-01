@@ -7,6 +7,7 @@ import {
   getCarByIdService,
   updateCarService,
 } from "../services/carServices";
+import { parsePagination } from "../lib/pagination";
 
 export const getAllAdminsCars = async (req: AuthRequest, res: Response) => {
   try {
@@ -16,8 +17,14 @@ export const getAllAdminsCars = async (req: AuthRequest, res: Response) => {
         .json({ error: "Unauthorized - User not authenticated" });
     }
 
-    const cars = await getAllAdminsCarsService();
-    res.status(200).json({ cars });
+    const { limit, skip } = parsePagination(req.query);
+
+    const { cars, totalItems } = await getAllAdminsCarsService({ limit, skip });
+    const { page, totalPages, hasNextPage, isFirstPage, isLastPage } =
+      parsePagination(req.query, undefined, totalItems);
+    res
+      .status(200)
+      .json({ cars, page, totalPages, hasNextPage, isFirstPage, isLastPage });
   } catch (error) {
     console.error("Error fetching cars:", error);
     res.status(500).json({ error: "Internal server error" });
