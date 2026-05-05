@@ -17,16 +17,41 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+model Make {
+  id     String  @id @default(uuid())
+  name   String  @unique
+  models Model[]
+  cars   Car[]
+}
+
+model Model {
+  id     String @id @default(uuid())
+  name   String
+  makeId String
+  make   Make   @relation(fields: [makeId], references: [id])
+  cars   Car[]
+}
+
+model Type {
+  id   String @id @default(uuid())
+  name String @unique
+  cars Car[]
+}
+
 model Car {
   id        String   @id @default(uuid())
-  type      String   @db.VarChar(255)
-  makes     String   @db.VarChar(255)
-  model     String   @db.VarChar(255)
-  year      String   @db.VarChar(255)
+  makeId    String
+  make      Make     @relation(fields: [makeId], references: [id])
+  modelId   String
+  model     Model    @relation(fields: [modelId], references: [id])
+  typeId    String
+  type      Type     @relation(fields: [typeId], references: [id])
+  year      Int
   lot       String   @unique @db.VarChar(255)
   price     Float
   images    String[]
   location  String   @db.VarChar(255)
+  status    String   @default("active")
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
