@@ -2,9 +2,9 @@ import cloudinary from "../lib/cloudinary";
 import prisma from "../lib/prisma";
 
 interface CreateCarData {
-  makes: string;
-  type: string;
-  model: string;
+  makeId: string;
+  typeId: string;
+  modelId: string;
   year: string;
   price: string;
   lot: string;
@@ -16,9 +16,9 @@ interface CreateCarData {
 interface UpdateCarData {
   carId: string;
   userId: string;
-  makes?: string;
-  type?: string;
-  model?: string;
+  makeId?: string;
+  typeId?: string;
+  modelId?: string;
   year?: string;
   location?: string;
   price?: string;
@@ -54,7 +54,12 @@ export const getAllAdminsCarsService = async ({
 }) => {
   const [rawCars, totalItems] = await Promise.all([
     prisma.car.findMany({
-      include: { user: { select: { username: true } } },
+      include: {
+        user: { select: { username: true } },
+        make: { select: { id: true, name: true } },
+        model: { select: { id: true, name: true } },
+        type: { select: { id: true, name: true } },
+      },
       orderBy: { createdAt: "desc" },
       skip,
       take: limit,
@@ -62,7 +67,7 @@ export const getAllAdminsCarsService = async ({
     prisma.car.count(),
   ]);
 
-  const cars = rawCars.map(({ userId, user, ...car }) => ({
+  const cars = rawCars.map(({ userId, user, makeId, modelId, typeId, ...car }) => ({
     ...car,
     owner: { id: userId, username: user.username },
   }));
@@ -71,9 +76,9 @@ export const getAllAdminsCarsService = async ({
 };
 
 export const createCarService = async ({
-  makes,
-  type,
-  model,
+  makeId,
+  typeId,
+  modelId,
   year,
   price,
   location,
@@ -82,9 +87,9 @@ export const createCarService = async ({
   lot,
 }: CreateCarData) => {
   if (
-    !makes ||
-    !type ||
-    !model ||
+    !makeId ||
+    !typeId ||
+    !modelId ||
     !year ||
     !price ||
     !location ||
@@ -107,10 +112,10 @@ export const createCarService = async ({
 
   return prisma.car.create({
     data: {
-      makes,
-      type,
-      model,
-      year,
+      makeId,
+      typeId,
+      modelId,
+      year: parseInt(year),
       price: parseFloat(price),
       location,
       images: imageUrls,
@@ -148,9 +153,9 @@ export const deleteCarService = async ({
 export const updateCarService = async ({
   carId,
   userId,
-  makes,
-  type,
-  model,
+  makeId,
+  typeId,
+  modelId,
   year,
   location,
   price,
@@ -196,10 +201,10 @@ export const updateCarService = async ({
   const updatedCar = await prisma.car.update({
     where: { id: carId },
     data: {
-      ...(makes !== undefined && { makes }),
-      ...(type !== undefined && { type }),
-      ...(model !== undefined && { model }),
-      ...(year !== undefined && { year }),
+      ...(makeId !== undefined && { makeId }),
+      ...(typeId !== undefined && { typeId }),
+      ...(modelId !== undefined && { modelId }),
+      ...(year !== undefined && { year: parseInt(year) }),
       ...(location !== undefined && { location }),
       ...(price !== undefined && { price: parseFloat(price) }),
       ...(lot !== undefined && { lot }),
@@ -221,11 +226,103 @@ export const updateCarService = async ({
 export const getCarByIdService = async (carId: string) => {
   const result = await prisma.car.findUnique({
     where: { id: carId },
-    include: { user: { select: { username: true } } },
+    include: {
+      user: { select: { username: true } },
+      make: { select: { id: true, name: true } },
+      model: { select: { id: true, name: true } },
+      type: { select: { id: true, name: true } },
+    },
   });
 
   if (!result) throw new Error("Car not found");
 
-  const { userId, user, ...car } = result;
+  const { userId, user, makeId, modelId, typeId, ...car } = result;
   return { ...car, owner: { id: userId, username: user.username } };
+};
+
+export const getAllMakesService = async () => {
+  const makes = await prisma.make.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+  return makes;
+};
+
+export const createMakeService = async (make: string) => {
+  if (!make.trim()) {
+    throw new Error("Make is required");
+  }
+  const existingMakes = await prisma.make.findFirst({
+    where: { name: make.trim().toLowerCase() },
+    select: { name: true },
+  });
+
+  if (existingMakes) {
+    throw new Error("Make already exists");
+  }
+
+  const newMake = await prisma.make.create({
+    data: { name: make.trim().toLowerCase() },
+  });
+  return newMake;
+};
+
+export const getModelsByMakeService = async (makeId: string) => {
+  if (!makeId) return [];
+
+  const models = await prisma.model.findMany({
+    where: { makeId },
+    select: { id: true, name: true, makeId: true },
+    orderBy: { name: "asc" },
+  });
+  return models;
+};
+
+export const createModelService = async (model: string, makeId: string) => {
+  if (!model.trim()) {
+    throw new Error("Model is required");
+  }
+  if (!makeId) {
+    throw new Error("makeId is required");
+  }
+  const existingModels = await prisma.model.findFirst({
+    where: { name: model.trim().toLowerCase(), makeId },
+    select: { name: true },
+  });
+
+  if (existingModels) {
+    throw new Error("Model already exists");
+  }
+
+  const newModel = await prisma.model.create({
+    data: { name: model.trim().toLowerCase(), makeId },
+  });
+  return newModel;
+};
+
+export const getAllTypesService = async () => {
+  const types = await prisma.type.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+  return types;
+};
+
+export const createTypeService = async (type: string) => {
+  if (!type.trim()) {
+    throw new Error("Type is required");
+  }
+  const existingTypes = await prisma.type.findFirst({
+    where: { name: type.trim().toLowerCase() },
+    select: { name: true },
+  });
+
+  if (existingTypes) {
+    throw new Error("Type already exists");
+  }
+
+  const newType = await prisma.type.create({
+    data: { name: type.trim().toLowerCase() },
+  });
+  return newType;
 };
