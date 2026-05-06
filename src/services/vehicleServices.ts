@@ -1,7 +1,7 @@
 import cloudinary from "../lib/cloudinary";
 import prisma from "../lib/prisma";
 
-interface CreateCarData {
+interface CreateVehicleData {
   makeId: string;
   typeId: string;
   modelId: string;
@@ -13,8 +13,8 @@ interface CreateCarData {
   userId: string;
 }
 
-interface UpdateCarData {
-  carId: string;
+interface UpdateVehicleData {
+  vehicleId: string;
   userId: string;
   makeId?: string;
   typeId?: string;
@@ -45,15 +45,15 @@ const uploadToCloudinary = (file: Express.Multer.File): Promise<string> =>
     stream.end(file.buffer);
   });
 
-export const getAllAdminsCarsService = async ({
+export const getAllAdminsVehiclesService = async ({
   limit,
   skip,
 }: {
   limit: number;
   skip: number;
 }) => {
-  const [rawCars, totalItems] = await Promise.all([
-    prisma.car.findMany({
+  const [rawVehicles, totalItems] = await Promise.all([
+    prisma.vehicle.findMany({
       include: {
         user: { select: { username: true } },
         make: { select: { id: true, name: true } },
@@ -64,18 +64,20 @@ export const getAllAdminsCarsService = async ({
       skip,
       take: limit,
     }),
-    prisma.car.count(),
+    prisma.vehicle.count(),
   ]);
 
-  const cars = rawCars.map(({ userId, user, makeId, modelId, typeId, ...car }) => ({
-    ...car,
-    owner: { id: userId, username: user.username },
-  }));
+  const vehicles = rawVehicles.map(
+    ({ userId, user, makeId, modelId, typeId, ...vehicleFields }) => ({
+      ...vehicleFields,
+      owner: { id: userId, username: user.username },
+    }),
+  );
 
-  return { cars, totalItems };
+  return { vehicles, totalItems };
 };
 
-export const createCarService = async ({
+export const createVehicleService = async ({
   makeId,
   typeId,
   modelId,
@@ -85,7 +87,7 @@ export const createCarService = async ({
   files,
   userId,
   lot,
-}: CreateCarData) => {
+}: CreateVehicleData) => {
   if (
     !makeId ||
     !typeId ||
@@ -100,17 +102,17 @@ export const createCarService = async ({
     throw new Error("All fields are required");
   }
 
-  const existingCarWithLot = await prisma.car.findUnique({
+  const existingVehicleWithLot = await prisma.vehicle.findUnique({
     where: { lot },
   });
 
-  if (existingCarWithLot) {
-    throw new Error("A car with this lot already exists");
+  if (existingVehicleWithLot) {
+    throw new Error("A vehicle with this lot already exists");
   }
 
   const imageUrls = await Promise.all(files.map(uploadToCloudinary));
 
-  return prisma.car.create({
+  return prisma.vehicle.create({
     data: {
       makeId,
       typeId,
@@ -125,33 +127,35 @@ export const createCarService = async ({
   });
 };
 
-export const deleteCarService = async ({
-  carId,
+export const deleteVehicleService = async ({
+  vehicleId,
   userId,
 }: {
-  carId: string;
+  vehicleId: string;
   userId: string;
 }) => {
-  const car = await prisma.car.findUnique({ where: { id: carId } });
+  const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
 
-  if (!car) throw new Error("Car not found");
-  if (car.userId !== userId) throw new Error("Unauthorized");
+  if (!vehicle) throw new Error("Vehicle not found");
+  if (vehicle.userId !== userId) throw new Error("Unauthorized");
 
-  const deletedCar = await prisma.car.delete({ where: { id: carId } });
+  const deletedVehicle = await prisma.vehicle.delete({
+    where: { id: vehicleId },
+  });
 
-  if (car.images.length > 0) {
+  if (vehicle.images.length > 0) {
     await Promise.all(
-      car.images.map((url) =>
+      vehicle.images.map((url) =>
         cloudinary.uploader.destroy(getCloudinaryPublicId(url)),
       ),
     );
   }
 
-  return deletedCar;
+  return deletedVehicle;
 };
 
-export const updateCarService = async ({
-  carId,
+export const updateVehicleService = async ({
+  vehicleId,
   userId,
   makeId,
   typeId,
@@ -162,16 +166,30 @@ export const updateCarService = async ({
   files,
   lot,
   existingImages,
-}: UpdateCarData) => {
-  const car = await prisma.car.findUnique({ where: { id: carId } });
+}: UpdateVehicleData) => {
+  const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
 
-  if (!car) throw new Error("Car not found");
-  if (car.userId !== userId) throw new Error("Unauthorized");
+  if (!vehicle) throw new Error("Vehicle not found");
+  if (vehicle.userId !== userId) throw new Error("Unauthorized");
 
-  if (lot && lot !== car.lot) {
-    const existingCarWithLot = await prisma.car.findUnique({ where: { lot } });
-    if (existingCarWithLot) {
-      throw new Error("A car with this lot already exists");
+  if (
+    (makeId !== undefined && !makeId) ||
+    (typeId !== undefined && !typeId) ||
+    (modelId !== undefined && !modelId) ||
+    (year !== undefined && !year) ||
+    (price !== undefined && !price) ||
+    (location !== undefined && !location) ||
+    (lot !== undefined && !lot)
+  ) {
+    throw new Error("All fields are required");
+  }
+
+  if (lot && lot !== vehicle.lot) {
+    const existingVehicleWithLot = await prisma.vehicle.findUnique({
+      where: { lot },
+    });
+    if (existingVehicleWithLot) {
+      throw new Error("A vehicle with this lot already exists");
     }
   }
 
@@ -185,7 +203,7 @@ export const updateCarService = async ({
         : [existingImages]
       : [];
 
-    removedImages = car.images.filter((url) => !keptImages.includes(url));
+    removedImages = vehicle.images.filter((url) => !keptImages.includes(url));
 
     const newImageUrls = files?.length
       ? await Promise.all(files.map(uploadToCloudinary))
@@ -198,8 +216,8 @@ export const updateCarService = async ({
     }
   }
 
-  const updatedCar = await prisma.car.update({
-    where: { id: carId },
+  const updatedVehicle = await prisma.vehicle.update({
+    where: { id: vehicleId },
     data: {
       ...(makeId !== undefined && { makeId }),
       ...(typeId !== undefined && { typeId }),
@@ -220,12 +238,12 @@ export const updateCarService = async ({
     );
   }
 
-  return updatedCar;
+  return updatedVehicle;
 };
 
-export const getCarByIdService = async (carId: string) => {
-  const result = await prisma.car.findUnique({
-    where: { id: carId },
+export const getVehicleByIdService = async (vehicleId: string) => {
+  const result = await prisma.vehicle.findUnique({
+    where: { id: vehicleId },
     include: {
       user: { select: { username: true } },
       make: { select: { id: true, name: true } },
@@ -234,10 +252,10 @@ export const getCarByIdService = async (carId: string) => {
     },
   });
 
-  if (!result) throw new Error("Car not found");
+  if (!result) throw new Error("Vehicle not found");
 
-  const { userId, user, makeId, modelId, typeId, ...car } = result;
-  return { ...car, owner: { id: userId, username: user.username } };
+  const { userId, user, makeId, modelId, typeId, ...vehicle } = result;
+  return { ...vehicle, owner: { id: userId, username: user.username } };
 };
 
 export const getAllMakesService = async () => {

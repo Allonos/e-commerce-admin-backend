@@ -1,42 +1,42 @@
 import express from "express";
 import { protectRoute } from "../middleware/protectRoute";
 import {
-  getAllAdminsCars,
-  createCar,
-  deleteCar,
-  updateCar,
-  getCarById,
+  getAllAdminsVehicles,
+  createVehicle,
+  deleteVehicle,
+  updateVehicle,
+  getVehicleById,
   getAllMakes,
   createMake,
   getModelsByMake,
   createModel,
   getAllTypes,
   createType,
-} from "../controllers/carControllers";
+} from "../controllers/vehicleControllers";
 import upload from "../middleware/upload";
 
 const router = express.Router();
 
 /**
  * @swagger
- * /api/cars:
+ * /api/vehicles:
  *   get:
- *     summary: Get all cars
- *     tags: [Cars]
+ *     summary: Get all vehicles
+ *     tags: [Vehicles]
  *     security:
  *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: List of all cars
+ *         description: List of all vehicles
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 cars:
+ *                 vehicles:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Car'
+ *                     $ref: '#/components/schemas/Vehicle'
  *       401:
  *         description: Unauthorized
  *         content:
@@ -50,14 +50,14 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", protectRoute, getAllAdminsCars);
+router.get("/", protectRoute, getAllAdminsVehicles);
 
 /**
  * @swagger
- * /api/cars/create-car:
+ * /api/vehicles/create-vehicle:
  *   post:
- *     summary: Create a new car listing
- *     tags: [Cars]
+ *     summary: Create a new vehicle listing
+ *     tags: [Vehicles]
  *     security:
  *       - cookieAuth: []
  *     requestBody:
@@ -91,14 +91,14 @@ router.get("/", protectRoute, getAllAdminsCars);
  *                 description: 1 to 4 images
  *     responses:
  *       201:
- *         description: Car created successfully
+ *         description: Vehicle created successfully
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 car:
- *                   $ref: '#/components/schemas/Car'
+ *                 vehicle:
+ *                   $ref: '#/components/schemas/Vehicle'
  *       400:
  *         description: Missing fields or too many images
  *         content:
@@ -118,15 +118,15 @@ router.get("/", protectRoute, getAllAdminsCars);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
+router.post("/create-vehicle", upload.array("images", 4), protectRoute, createVehicle);
 
 /**
  *
  * @swagger
- * /api/cars/{id}:
+ * /api/vehicles/{id}:
  *   get:
- *     summary: Get a car by ID
- *     tags: [Cars]
+ *     summary: Get a vehicle by ID
+ *     tags: [Vehicles]
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -135,17 +135,17 @@ router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
  *         required: true
  *         schema:
  *           type: string
- *         description: Car ID
+ *         description: Vehicle ID
  *     responses:
  *       200:
- *         description: Car found
+ *         description: Vehicle found
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 car:
- *                   $ref: '#/components/schemas/Car'
+ *                 vehicle:
+ *                   $ref: '#/components/schemas/Vehicle'
  *       401:
  *         description: Unauthorized
  *         content:
@@ -153,7 +153,7 @@ router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       404:
- *         description: Car not found
+ *         description: Vehicle not found
  *         content:
  *           application/json:
  *             schema:
@@ -165,8 +165,8 @@ router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *   patch:
- *     summary: Update a car listing
- *     tags: [Cars]
+ *     summary: Update a vehicle listing
+ *     tags: [Vehicles]
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -175,7 +175,7 @@ router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
  *         required: true
  *         schema:
  *           type: string
- *         description: Car ID
+ *         description: Vehicle ID
  *     requestBody:
  *       content:
  *         multipart/form-data:
@@ -210,14 +210,14 @@ router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
  *                 description: New images to upload (combined with existingImages must be 1–4)
  *     responses:
  *       200:
- *         description: Car updated successfully
+ *         description: Vehicle updated successfully
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 car:
- *                   $ref: '#/components/schemas/Car'
+ *                 vehicle:
+ *                   $ref: '#/components/schemas/Vehicle'
  *       400:
  *         description: Invalid image count
  *         content:
@@ -237,7 +237,7 @@ router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       404:
- *         description: Car not found
+ *         description: Vehicle not found
  *         content:
  *           application/json:
  *             schema:
@@ -249,8 +249,8 @@ router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *   delete:
- *     summary: Delete a car listing
- *     tags: [Cars]
+ *     summary: Delete a vehicle listing
+ *     tags: [Vehicles]
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -259,10 +259,10 @@ router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
  *         required: true
  *         schema:
  *           type: string
- *         description: Car ID
+ *         description: Vehicle ID
  *     responses:
  *       200:
- *         description: Car deleted successfully
+ *         description: Vehicle deleted successfully
  *         content:
  *           application/json:
  *             schema:
@@ -270,9 +270,9 @@ router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Car deleted
- *                 deletedCar:
- *                   $ref: '#/components/schemas/Car'
+ *                   example: Vehicle deleted
+ *                 deletedVehicle:
+ *                   $ref: '#/components/schemas/Vehicle'
  *       401:
  *         description: Unauthorized
  *         content:
@@ -286,7 +286,7 @@ router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       404:
- *         description: Car not found
+ *         description: Vehicle not found
  *         content:
  *           application/json:
  *             schema:
@@ -301,7 +301,7 @@ router.post("/create-car", upload.array("images", 4), protectRoute, createCar);
 
 /**
  * @swagger
- * /api/cars/makes:
+ * /api/vehicles/makes:
  *   get:
  *     summary: Get all makes
  *     tags: [Makes]
@@ -382,7 +382,7 @@ router.post("/makes", protectRoute, createMake);
 
 /**
  * @swagger
- * /api/cars/models:
+ * /api/vehicles/models:
  *   get:
  *     summary: Get all models
  *     tags: [Models]
@@ -470,7 +470,7 @@ router.post("/models", protectRoute, createModel);
 
 /**
  * @swagger
- * /api/cars/types:
+ * /api/vehicles/types:
  *   get:
  *     summary: Get all types
  *     tags: [Types]
@@ -549,8 +549,8 @@ router.post("/models", protectRoute, createModel);
 router.get("/types", getAllTypes);
 router.post("/types", protectRoute, createType);
 
-router.delete("/:id", protectRoute, deleteCar);
-router.patch("/:id", upload.array("images", 4), protectRoute, updateCar);
-router.get("/:id", protectRoute, getCarById);
+router.delete("/:id", protectRoute, deleteVehicle);
+router.patch("/:id", upload.array("images", 4), protectRoute, updateVehicle);
+router.get("/:id", protectRoute, getVehicleById);
 
 export default router;

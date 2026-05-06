@@ -25,7 +25,7 @@ const options: swaggerJsdoc.Options = {
             email: { type: "string" },
           },
         },
-        Car: {
+        Vehicle: {
           type: "object",
           properties: {
             id: { type: "string" },

@@ -1,21 +1,21 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/protectRoute";
 import {
-  createCarService,
+  createVehicleService,
   createMakeService,
   createModelService,
   createTypeService,
-  deleteCarService,
-  getAllAdminsCarsService,
+  deleteVehicleService,
+  getAllAdminsVehiclesService,
   getAllMakesService,
   getAllTypesService,
-  getCarByIdService,
+  getVehicleByIdService,
   getModelsByMakeService,
-  updateCarService,
-} from "../services/carServices";
+  updateVehicleService,
+} from "../services/vehicleServices";
 import { parsePagination } from "../lib/pagination";
 
-export const getAllAdminsCars = async (req: AuthRequest, res: Response) => {
+export const getAllAdminsVehicles = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res
@@ -25,19 +25,19 @@ export const getAllAdminsCars = async (req: AuthRequest, res: Response) => {
 
     const { limit, skip } = parsePagination(req.query);
 
-    const { cars, totalItems } = await getAllAdminsCarsService({ limit, skip });
+    const { vehicles, totalItems } = await getAllAdminsVehiclesService({ limit, skip });
     const { page, totalPages, hasNextPage, isFirstPage, isLastPage } =
       parsePagination(req.query, undefined, totalItems);
     res
       .status(200)
-      .json({ cars, page, totalPages, hasNextPage, isFirstPage, isLastPage });
+      .json({ vehicles, page, totalPages, hasNextPage, isFirstPage, isLastPage });
   } catch (error) {
-    console.error("Error fetching cars:", error);
+    console.error("Error fetching vehicles:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-export const createCar = async (req: AuthRequest, res: Response) => {
+export const createVehicle = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res
@@ -51,10 +51,10 @@ export const createCar = async (req: AuthRequest, res: Response) => {
     if (files.length > 4) {
       return res
         .status(400)
-        .json({ error: "Car must have between 1 and 4 images" });
+        .json({ error: "Vehicle must have between 1 and 4 images" });
     }
 
-    const newCar = await createCarService({
+    const newVehicle = await createVehicleService({
       makeId,
       typeId,
       modelId,
@@ -66,25 +66,25 @@ export const createCar = async (req: AuthRequest, res: Response) => {
       userId: req.user.id,
     });
 
-    res.status(201).json({ car: newCar });
+    res.status(201).json({ vehicle: newVehicle });
   } catch (error) {
     if (error instanceof Error && error.message === "All fields are required") {
       return res.status(400).json({ error: "All fields are required" });
     }
     if (
       error instanceof Error &&
-      error.message === "A car with this lot already exists"
+      error.message === "A vehicle with this lot already exists"
     ) {
       return res
         .status(400)
-        .json({ error: "A car with this lot already exists" });
+        .json({ error: "A vehicle with this lot already exists" });
     }
-    console.error("Error creating car:", error);
+    console.error("Error creating vehicle:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-export const deleteCar = async (req: AuthRequest, res: Response) => {
+export const deleteVehicle = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res
@@ -92,25 +92,25 @@ export const deleteCar = async (req: AuthRequest, res: Response) => {
         .json({ error: "Unauthorized - User is not authenticated" });
     }
 
-    const deletedCar = await deleteCarService({
-      carId: req.params.id as string,
+    const deletedVehicle = await deleteVehicleService({
+      vehicleId: req.params.id as string,
       userId: req.user.id,
     });
 
-    res.json({ message: "Car deleted", deletedCar });
+    res.json({ message: "Vehicle deleted", deletedVehicle });
   } catch (error) {
-    if (error instanceof Error && error.message === "Car not found") {
-      return res.status(404).json({ error: "Car not found" });
+    if (error instanceof Error && error.message === "Vehicle not found") {
+      return res.status(404).json({ error: "Vehicle not found" });
     }
     if (error instanceof Error && error.message === "Unauthorized") {
       return res.status(403).json({ error: "Unauthorized" });
     }
-    console.error("Error deleting car:", error);
+    console.error("Error deleting vehicle:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-export const updateCar = async (req: AuthRequest, res: Response) => {
+export const updateVehicle = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res
@@ -130,8 +130,8 @@ export const updateCar = async (req: AuthRequest, res: Response) => {
     } = req.body;
     const files = req.files as Express.Multer.File[] | undefined;
 
-    const updatedCar = await updateCarService({
-      carId: req.params.id as string,
+    const updatedVehicle = await updateVehicleService({
+      vehicleId: req.params.id as string,
       userId: req.user.id,
       makeId,
       typeId,
@@ -144,33 +144,36 @@ export const updateCar = async (req: AuthRequest, res: Response) => {
       lot,
     });
 
-    res.json({ car: updatedCar });
+    res.json({ vehicle: updatedVehicle });
   } catch (error) {
-    if (error instanceof Error && error.message === "Car not found") {
-      return res.status(404).json({ error: "Car not found" });
+    if (error instanceof Error && error.message === "Vehicle not found") {
+      return res.status(404).json({ error: "Vehicle not found" });
     }
     if (error instanceof Error && error.message === "Unauthorized") {
       return res.status(403).json({ error: "Unauthorized" });
     }
+    if (error instanceof Error && error.message === "All fields are required") {
+      return res.status(400).json({ error: "All fields are required" });
+    }
     if (error instanceof Error && error.message === "INVALID_IMAGE_COUNT") {
       return res
         .status(400)
-        .json({ error: "Car must have between 1 and 4 images" });
+        .json({ error: "Vehicle must have between 1 and 4 images" });
     }
     if (
       error instanceof Error &&
-      error.message === "A car with this lot already exists"
+      error.message === "A vehicle with this lot already exists"
     ) {
       return res
         .status(400)
-        .json({ error: "A car with this lot already exists" });
+        .json({ error: "A vehicle with this lot already exists" });
     }
-    console.error("Error updating car:", error);
+    console.error("Error updating vehicle:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-export const getCarById = async (req: AuthRequest, res: Response) => {
+export const getVehicleById = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res
@@ -178,13 +181,13 @@ export const getCarById = async (req: AuthRequest, res: Response) => {
         .json({ error: "Unauthorized - User is not authenticated" });
     }
 
-    const car = await getCarByIdService(req.params.id as string);
-    res.json({ car });
+    const vehicle = await getVehicleByIdService(req.params.id as string);
+    res.json({ vehicle });
   } catch (error) {
-    if (error instanceof Error && error.message === "Car not found") {
-      return res.status(404).json({ error: "Car not found" });
+    if (error instanceof Error && error.message === "Vehicle not found") {
+      return res.status(404).json({ error: "Vehicle not found" });
     }
-    console.error("Error fetching car:", error);
+    console.error("Error fetching vehicle:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
