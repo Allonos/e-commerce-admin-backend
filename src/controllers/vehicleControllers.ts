@@ -1,0 +1,195 @@
+import { Response } from "express";
+import { AuthRequest } from "../middleware/protectRoute";
+import {
+  createVehicleService,
+  deleteVehicleService,
+  getAllAdminsVehiclesService,
+  getVehicleByIdService,
+  updateVehicleService,
+} from "../services/vehicleServices";
+import { parsePagination } from "../lib/pagination";
+
+export const getAllAdminsVehicles = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized - User not authenticated" });
+    }
+
+    const { limit, skip } = parsePagination(req.query);
+
+    const { vehicles, totalItems } = await getAllAdminsVehiclesService({
+      limit,
+      skip,
+    });
+    const { page, totalPages, hasNextPage, isFirstPage, isLastPage } =
+      parsePagination(req.query, undefined, totalItems);
+    res.status(200).json({
+      vehicles,
+      page,
+      totalPages,
+      hasNextPage,
+      isFirstPage,
+      isLastPage,
+    });
+  } catch (error) {
+    console.error("Error fetching vehicles:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const createVehicle = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized - User not authenticated" });
+    }
+
+    const { makeId, typeId, modelId, year, price, location, lot } = req.body;
+    const files = req.files as Express.Multer.File[];
+
+    if (files.length > 4) {
+      return res
+        .status(400)
+        .json({ error: "Vehicle must have between 1 and 4 images" });
+    }
+
+    const newVehicle = await createVehicleService({
+      makeId,
+      typeId,
+      modelId,
+      year,
+      price,
+      location,
+      files,
+      lot,
+      userId: req.user.id,
+    });
+
+    res.status(201).json({ vehicle: newVehicle });
+  } catch (error) {
+    if (error instanceof Error && error.message === "All fields are required") {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+    if (
+      error instanceof Error &&
+      error.message === "A vehicle with this lot already exists"
+    ) {
+      return res
+        .status(400)
+        .json({ error: "A vehicle with this lot already exists" });
+    }
+    console.error("Error creating vehicle:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const deleteVehicle = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized - User is not authenticated" });
+    }
+
+    const deletedVehicle = await deleteVehicleService({
+      vehicleId: req.params.id as string,
+      userId: req.user.id,
+    });
+
+    res.json({ message: "Vehicle deleted", deletedVehicle });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Vehicle not found") {
+      return res.status(404).json({ error: "Vehicle not found" });
+    }
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+    console.error("Error deleting vehicle:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const updateVehicle = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized - User is not authenticated" });
+    }
+
+    const {
+      makeId,
+      typeId,
+      modelId,
+      year,
+      location,
+      price,
+      lot,
+      existingImages,
+    } = req.body;
+    const files = req.files as Express.Multer.File[] | undefined;
+
+    const updatedVehicle = await updateVehicleService({
+      vehicleId: req.params.id as string,
+      userId: req.user.id,
+      makeId,
+      typeId,
+      modelId,
+      year,
+      location,
+      price,
+      files,
+      existingImages,
+      lot,
+    });
+
+    res.json({ vehicle: updatedVehicle });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Vehicle not found") {
+      return res.status(404).json({ error: "Vehicle not found" });
+    }
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+    if (error instanceof Error && error.message === "All fields are required") {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+    if (error instanceof Error && error.message === "INVALID_IMAGE_COUNT") {
+      return res
+        .status(400)
+        .json({ error: "Vehicle must have between 1 and 4 images" });
+    }
+    if (
+      error instanceof Error &&
+      error.message === "A vehicle with this lot already exists"
+    ) {
+      return res
+        .status(400)
+        .json({ error: "A vehicle with this lot already exists" });
+    }
+    console.error("Error updating vehicle:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getVehicleById = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized - User is not authenticated" });
+    }
+
+    const vehicle = await getVehicleByIdService(req.params.id as string);
+    res.json({ vehicle });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Vehicle not found") {
+      return res.status(404).json({ error: "Vehicle not found" });
+    }
+    console.error("Error fetching vehicle:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

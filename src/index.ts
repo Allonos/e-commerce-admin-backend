@@ -5,7 +5,8 @@ import dotenv from "dotenv";
 import swaggerUi from "swagger-ui-express";
 
 import userRoutes from "./routes/userRoutes";
-import carRoutes from "./routes/carRoutes";
+import vehicleRoutes from "./routes/vehicleRoutes";
+import vehicelCategoriesRoutes from "./routes/vehicleCategoriesRoutes";
 import { swaggerSpec } from "./lib/swagger";
 
 dotenv.config();
@@ -26,7 +27,8 @@ app.use(cookieParser());
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/api/users", userRoutes);
-app.use("/api/cars", carRoutes);
+app.use("/api/vehicles", vehicleRoutes);
+app.use("/api/vehicles/categories", vehicelCategoriesRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
