@@ -15,9 +15,9 @@ export const getHeroVehicles = async (req: AuthRequest, res: Response) => {
         .json({ message: "Unauthorized - No token provided" });
     }
 
-    const { data: heroVehicles } = await getHeroVehiclesService();
+    const { heroVehicles } = await getHeroVehiclesService();
 
-    res.json({ data: heroVehicles });
+    res.json({ heroVehicles });
   } catch (error) {
     console.error("Error fetching hero vehicles:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -32,13 +32,13 @@ export const addHeroVehicle = async (req: AuthRequest, res: Response) => {
         .json({ message: "Unauthorized - No token provided" });
     }
     const { tagLine, subtitle, file } = req.body;
-    const { data } = await addHeroVehicleService({
+    const { heroVehicle } = await addHeroVehicleService({
       tagLine,
       subtitle,
       file,
     });
 
-    res.status(201).json({ data });
+    res.status(201).json({ heroVehicle });
   } catch (error) {
     if (error instanceof Error && error.message === "All fields are required") {
       return res.status(400).json({ message: "All fields are required" });
@@ -57,14 +57,14 @@ export const editHeroVehicle = async (req: AuthRequest, res: Response) => {
     }
     const { heroId, tagLine, subtitle, file } = req.body;
 
-    const { data } = await editHeroVehicleService({
+    const { updatedHeroVehicle } = await editHeroVehicleService({
       heroId,
       tagLine,
       subtitle,
       file,
     });
 
-    res.json({ data });
+    res.json({ updatedHeroVehicle });
   } catch (error) {
     if (error instanceof Error && error.message === "Hero vehicle not found") {
       return res.status(404).json({ message: "Hero vehicle not found" });
@@ -86,9 +86,9 @@ export const deleteHeroVehicle = async (req: AuthRequest, res: Response) => {
     }
 
     const { heroId } = req.params as { heroId: string };
-    const { data } = await deleteHeroVehicleService({ heroId });
+    const { deletedHeroVehicle } = await deleteHeroVehicleService({ heroId });
 
-    res.json({ message: "Hero vehicle deleted", data });
+    res.json({ message: "Hero vehicle deleted", deletedHeroVehicle });
   } catch (error) {
     if (error instanceof Error && error.message === "Hero vehicle not found") {
       return res.status(404).json({ message: "Hero vehicle not found" });

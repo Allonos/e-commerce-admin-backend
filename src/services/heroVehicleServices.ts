@@ -21,7 +21,7 @@ const uploadToCloudinary = (file: Express.Multer.File): Promise<string> =>
 
 export const getHeroVehiclesService = async () => {
   const heroVehicles = await prisma.hero.findMany();
-  return { data: heroVehicles };
+  return { heroVehicles };
 };
 
 export const addHeroVehicleService = async ({
@@ -43,7 +43,7 @@ export const addHeroVehicleService = async ({
     data: { tagLine, subtitle, image: imageUrl },
   });
 
-  return { data: heroVehicle };
+  return { heroVehicle };
 };
 
 export const editHeroVehicleService = async ({
@@ -85,7 +85,7 @@ export const editHeroVehicleService = async ({
     },
   });
 
-  return { data: updatedHeroVehicle };
+  return { updatedHeroVehicle };
 };
 
 export const deleteHeroVehicleService = async ({
@@ -102,5 +102,5 @@ export const deleteHeroVehicleService = async ({
     where: { id: heroId },
   });
 
-  return { data: deletedHeroVehicle };
+  return { deletedHeroVehicle };
 };

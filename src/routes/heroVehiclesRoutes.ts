@@ -5,6 +5,7 @@ import {
   editHeroVehicle,
   getHeroVehicles,
 } from "../controllers/heroVehicleControllers";
+import { protectRoute } from "../middleware/protectRoute";
 
 const router = express.Router();
 
@@ -48,7 +49,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/get-hero-vehicles", getHeroVehicles);
+router.get("/get-hero-vehicles", protectRoute, getHeroVehicles);
 
 /**
  * @swagger
@@ -105,7 +106,7 @@ router.get("/get-hero-vehicles", getHeroVehicles);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/add-hero-vehicle", addHeroVehicle);
+router.post("/add-hero-vehicle", protectRoute, addHeroVehicle);
 
 /**
  * @swagger
@@ -171,7 +172,7 @@ router.post("/add-hero-vehicle", addHeroVehicle);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.patch("/edit-hero-vehicle", editHeroVehicle);
+router.patch("/edit-hero-vehicle", protectRoute, editHeroVehicle);
 
 /**
  * @swagger
@@ -224,6 +225,6 @@ router.patch("/edit-hero-vehicle", editHeroVehicle);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.delete("/delete-hero-vehicle", deleteHeroVehicle);
+router.delete("/delete-hero-vehicle", protectRoute, deleteHeroVehicle);
 
 export default router;
