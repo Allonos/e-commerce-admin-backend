@@ -19,6 +19,11 @@ const uploadToCloudinary = (file: Express.Multer.File): Promise<string> =>
     stream.end(file.buffer);
   });
 
+export const getHeroVehiclesService = async () => {
+  const heroVehicles = await prisma.hero.findMany();
+  return { data: heroVehicles };
+};
+
 export const addHeroVehicleService = async ({
   tagLine,
   subtitle,

@@ -4,7 +4,25 @@ import {
   addHeroVehicleService,
   deleteHeroVehicleService,
   editHeroVehicleService,
+  getHeroVehiclesService,
 } from "../services/heroVehicleServices";
+
+export const getHeroVehicles = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized - No token provided" });
+    }
+
+    const { data: heroVehicles } = await getHeroVehiclesService();
+
+    res.json({ data: heroVehicles });
+  } catch (error) {
+    console.error("Error fetching hero vehicles:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export const addHeroVehicle = async (req: AuthRequest, res: Response) => {
   try {

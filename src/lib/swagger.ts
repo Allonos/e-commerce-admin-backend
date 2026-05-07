@@ -42,6 +42,15 @@ const options: swaggerJsdoc.Options = {
             userId: { type: "string" },
           },
         },
+        HeroVehicle: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            tagLine: { type: "string" },
+            subtitle: { type: "string" },
+            image: { type: "string", description: "Cloudinary image URL" },
+          },
+        },
         Error: {
           type: "object",
           properties: {
