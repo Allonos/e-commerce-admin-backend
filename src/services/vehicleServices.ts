@@ -11,6 +11,7 @@ interface CreateVehicleData {
   location: string;
   files: Express.Multer.File[] | undefined;
   userId: string;
+  isFeatured?: boolean | string;
 }
 
 interface UpdateVehicleData {
@@ -25,6 +26,7 @@ interface UpdateVehicleData {
   files?: Express.Multer.File[];
   existingImages?: string | string[];
   lot?: string;
+  isFeatured?: boolean | string;
 }
 
 const getCloudinaryPublicId = (url: string): string => {
@@ -87,6 +89,7 @@ export const createVehicleService = async ({
   files,
   userId,
   lot,
+  isFeatured = false,
 }: CreateVehicleData) => {
   if (
     !makeId ||
@@ -101,6 +104,8 @@ export const createVehicleService = async ({
   ) {
     throw new Error("All fields are required");
   }
+
+  const isFeaturedBool = isFeatured === true || isFeatured === "true";
 
   const existingVehicleWithLot = await prisma.vehicle.findUnique({
     where: { lot },
@@ -123,6 +128,7 @@ export const createVehicleService = async ({
       images: imageUrls,
       lot,
       userId,
+      isFeatured: isFeaturedBool,
     },
   });
 };
@@ -166,6 +172,7 @@ export const updateVehicleService = async ({
   files,
   lot,
   existingImages,
+  isFeatured,
 }: UpdateVehicleData) => {
   const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
 
@@ -183,6 +190,11 @@ export const updateVehicleService = async ({
   ) {
     throw new Error("All fields are required");
   }
+
+  const isFeaturedBool =
+    isFeatured !== undefined
+      ? isFeatured === true || isFeatured === "true"
+      : undefined;
 
   if (lot && lot !== vehicle.lot) {
     const existingVehicleWithLot = await prisma.vehicle.findUnique({
@@ -227,6 +239,7 @@ export const updateVehicleService = async ({
       ...(price !== undefined && { price: parseFloat(price) }),
       ...(lot !== undefined && { lot }),
       ...(updatedImages !== undefined && { images: updatedImages }),
+      ...(isFeaturedBool !== undefined && { isFeatured: isFeaturedBool }),
     },
   });
 

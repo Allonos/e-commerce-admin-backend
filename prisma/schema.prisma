@@ -38,22 +38,33 @@ model Type {
   vehicles Vehicle[]
 }
 
-model Vehicle {
+model Hero {
   id        String   @id @default(uuid())
-  makeId    String
-  make      Make     @relation(fields: [makeId], references: [id])
-  modelId   String
-  model     Model    @relation(fields: [modelId], references: [id])
-  typeId    String
-  type      Type     @relation(fields: [typeId], references: [id])
-  year      Int
-  lot       String   @unique @db.VarChar(255)
-  price     Float
-  images    String[]
-  location  String   @db.VarChar(255)
-  status    String   @default("active")
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  tagLine   String
+  subtitle  String
+  image     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Vehicle {
+  id         String   @id @default(uuid())
+  makeId     String
+  make       Make     @relation(fields: [makeId], references: [id])
+  modelId    String
+  model      Model    @relation(fields: [modelId], references: [id])
+  typeId     String
+  type       Type     @relation(fields: [typeId], references: [id])
+  year       Int
+  lot        String   @unique @db.VarChar(255)
+  price      Float
+  images     String[]
+  location   String   @db.VarChar(255)
+  status     String   @default("active")
+  isFeatured Boolean  @default(false)
+  views      Int      @default(0)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

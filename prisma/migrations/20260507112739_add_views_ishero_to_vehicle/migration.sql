@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Vehicle" ADD COLUMN     "isHero" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "views" INTEGER NOT NULL DEFAULT 0;
