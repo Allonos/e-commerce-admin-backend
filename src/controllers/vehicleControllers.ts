@@ -56,6 +56,7 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       location,
       lot,
       isFeatured = false,
+      priority = 0,
     } = req.body;
     const files = req.files as Express.Multer.File[];
 
@@ -75,6 +76,7 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       files,
       lot,
       isFeatured,
+      priority,
       userId: req.user.id,
     });
 
@@ -140,6 +142,7 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       lot,
       existingImages,
       isFeatured,
+      priority,
     } = req.body;
     const files = req.files as Express.Multer.File[] | undefined;
 
@@ -154,6 +157,7 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       price,
       files,
       existingImages,
+      priority,
       lot,
       isFeatured,
     });

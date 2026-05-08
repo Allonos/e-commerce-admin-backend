@@ -12,6 +12,7 @@ interface CreateVehicleData {
   files: Express.Multer.File[] | undefined;
   userId: string;
   isFeatured?: boolean | string;
+  priority?: number;
 }
 
 interface UpdateVehicleData {
@@ -25,6 +26,7 @@ interface UpdateVehicleData {
   price?: string;
   files?: Express.Multer.File[];
   existingImages?: string | string[];
+  priority?: number;
   lot?: string;
   isFeatured?: boolean | string;
 }
@@ -54,20 +56,45 @@ export const getAllAdminsVehiclesService = async ({
   limit: number;
   skip: number;
 }) => {
-  const [rawVehicles, totalItems] = await Promise.all([
-    prisma.vehicle.findMany({
-      include: {
-        user: { select: { username: true } },
-        make: { select: { id: true, name: true } },
-        model: { select: { id: true, name: true } },
-        type: { select: { id: true, name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: limit,
-    }),
+  const include = {
+    user: { select: { username: true } },
+    make: { select: { id: true, name: true } },
+    model: { select: { id: true, name: true } },
+    type: { select: { id: true, name: true } },
+  };
+
+  const [featuredCount, totalItems] = await Promise.all([
+    prisma.vehicle.count({ where: { isFeatured: true } }),
     prisma.vehicle.count(),
   ]);
+
+  const featuredSkip = Math.min(skip, featuredCount);
+  const featuredTake = Math.min(limit, featuredCount - featuredSkip);
+  const nonFeaturedSkip = Math.max(0, skip - featuredCount);
+  const nonFeaturedTake = limit - featuredTake;
+
+  const [featuredVehicles, nonFeaturedVehicles] = await Promise.all([
+    featuredTake > 0
+      ? prisma.vehicle.findMany({
+          where: { isFeatured: true },
+          include,
+          orderBy: { priority: "desc" },
+          skip: featuredSkip,
+          take: featuredTake,
+        })
+      : [],
+    nonFeaturedTake > 0
+      ? prisma.vehicle.findMany({
+          where: { isFeatured: false },
+          include,
+          orderBy: { createdAt: "desc" },
+          skip: nonFeaturedSkip,
+          take: nonFeaturedTake,
+        })
+      : [],
+  ]);
+
+  const rawVehicles = [...featuredVehicles, ...nonFeaturedVehicles];
 
   const vehicles = rawVehicles.map(
     ({ userId, user, makeId, modelId, typeId, ...vehicleFields }) => ({
@@ -90,6 +117,7 @@ export const createVehicleService = async ({
   userId,
   lot,
   isFeatured = false,
+  priority = 0,
 }: CreateVehicleData) => {
   if (
     !makeId ||
@@ -129,6 +157,7 @@ export const createVehicleService = async ({
       lot,
       userId,
       isFeatured: isFeaturedBool,
+      priority: parseInt(priority.toString()) || 0,
     },
   });
 };
@@ -171,6 +200,7 @@ export const updateVehicleService = async ({
   price,
   files,
   lot,
+  priority,
   existingImages,
   isFeatured,
 }: UpdateVehicleData) => {
@@ -238,6 +268,9 @@ export const updateVehicleService = async ({
       ...(location !== undefined && { location }),
       ...(price !== undefined && { price: parseFloat(price) }),
       ...(lot !== undefined && { lot }),
+      ...(priority !== undefined && {
+        priority: parseInt(priority.toString()) || 0,
+      }),
       ...(updatedImages !== undefined && { images: updatedImages }),
       ...(isFeaturedBool !== undefined && { isFeatured: isFeaturedBool }),
     },
