@@ -4,8 +4,10 @@ import {
   deleteHeroVehicle,
   editHeroVehicle,
   getHeroVehicles,
+  getHeroVehicleById,
 } from "../controllers/heroVehicleControllers";
 import { protectRoute } from "../middleware/protectRoute";
+import upload from "../middleware/upload";
 
 const router = express.Router();
 
@@ -106,27 +108,35 @@ router.get("/get-hero-vehicles", protectRoute, getHeroVehicles);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/add-hero-vehicle", protectRoute, addHeroVehicle);
+router.post(
+  "/add-hero-vehicle",
+  upload.single("file"),
+  protectRoute,
+  addHeroVehicle,
+);
 
 /**
  * @swagger
- * /api/hero-vehicles/edit-hero-vehicle:
+ * /api/hero-vehicles/edit-hero-vehicle/{heroId}:
  *   patch:
  *     summary: Edit an existing hero vehicle banner
  *     tags: [HeroVehicles]
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: heroId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the hero vehicle to update
  *     requestBody:
  *       required: true
  *       content:
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required: [heroId]
  *             properties:
- *               heroId:
- *                 type: string
- *                 description: ID of the hero vehicle to update
  *               tagLine:
  *                 type: string
  *                 description: Updated tag line
@@ -172,27 +182,28 @@ router.post("/add-hero-vehicle", protectRoute, addHeroVehicle);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.patch("/edit-hero-vehicle", protectRoute, editHeroVehicle);
+router.patch(
+  "/edit-hero-vehicle/:heroId",
+  upload.single("file"),
+  protectRoute,
+  editHeroVehicle,
+);
 
 /**
  * @swagger
- * /api/hero-vehicles/delete-hero-vehicle:
+ * /api/hero-vehicles/delete-hero-vehicle/{heroId}:
  *   delete:
  *     summary: Delete a hero vehicle banner
  *     tags: [HeroVehicles]
  *     security:
  *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [heroId]
- *             properties:
- *               heroId:
- *                 type: string
- *                 description: ID of the hero vehicle to delete
+ *     parameters:
+ *       - in: path
+ *         name: heroId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the hero vehicle to delete
  *     responses:
  *       200:
  *         description: Hero vehicle deleted successfully
@@ -225,6 +236,52 @@ router.patch("/edit-hero-vehicle", protectRoute, editHeroVehicle);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.delete("/delete-hero-vehicle", protectRoute, deleteHeroVehicle);
+router.delete("/delete-hero-vehicle/:heroId", protectRoute, deleteHeroVehicle);
+
+/**
+ * @swagger
+ * /api/hero-vehicles/get-hero-vehicle/{heroId}:
+ *   get:
+ *     summary: Get a hero vehicle banner by ID
+ *     tags: [HeroVehicles]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: heroId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the hero vehicle to retrieve
+ *     responses:
+ *       200:
+ *         description: Hero vehicle found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 heroVehicle:
+ *                   $ref: '#/components/schemas/HeroVehicle'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Hero vehicle not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get("/get-hero-vehicle/:heroId", protectRoute, getHeroVehicleById);
 
 export default router;

@@ -104,3 +104,14 @@ export const deleteHeroVehicleService = async ({
 
   return { deletedHeroVehicle };
 };
+
+export const getHeroVehicleByIdService = async ({
+  heroId,
+}: {
+  heroId: string;
+}) => {
+  const heroVehicle = await prisma.hero.findUnique({ where: { id: heroId } });
+  if (!heroVehicle) throw new Error("Hero vehicle not found");
+
+  return { heroVehicle };
+};

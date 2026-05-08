@@ -5,6 +5,7 @@ import {
   deleteHeroVehicleService,
   editHeroVehicleService,
   getHeroVehiclesService,
+  getHeroVehicleByIdService,
 } from "../services/heroVehicleServices";
 
 export const getHeroVehicles = async (req: AuthRequest, res: Response) => {
@@ -31,11 +32,11 @@ export const addHeroVehicle = async (req: AuthRequest, res: Response) => {
         .status(401)
         .json({ message: "Unauthorized - No token provided" });
     }
-    const { tagLine, subtitle, file } = req.body;
+    const { tagLine, subtitle } = req.body;
     const { heroVehicle } = await addHeroVehicleService({
       tagLine,
       subtitle,
-      file,
+      file: req.file ? [req.file] : [],
     });
 
     res.status(201).json({ heroVehicle });
@@ -55,13 +56,14 @@ export const editHeroVehicle = async (req: AuthRequest, res: Response) => {
         .status(401)
         .json({ message: "Unauthorized - No token provided" });
     }
-    const { heroId, tagLine, subtitle, file } = req.body;
+    const { heroId } = req.params as { heroId: string };
+    const { tagLine, subtitle } = req.body;
 
     const { updatedHeroVehicle } = await editHeroVehicleService({
       heroId,
       tagLine,
       subtitle,
-      file,
+      file: req.file ? [req.file] : undefined,
     });
 
     res.json({ updatedHeroVehicle });
@@ -94,6 +96,21 @@ export const deleteHeroVehicle = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "Hero vehicle not found" });
     }
     console.error("Error deleting hero vehicle:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getHeroVehicleById = async (req: AuthRequest, res: Response) => {
+  try {
+    const { heroId } = req.params as { heroId: string };
+    const { heroVehicle } = await getHeroVehicleByIdService({ heroId });
+
+    res.json({ heroVehicle });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Hero vehicle not found") {
+      return res.status(404).json({ message: "Hero vehicle not found" });
+    }
+    console.error("Error fetching hero vehicle:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
