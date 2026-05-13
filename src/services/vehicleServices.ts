@@ -13,6 +13,7 @@ interface CreateVehicleData {
   userId: string;
   isFeatured?: boolean | string;
   priority?: number;
+  status?: string;
 }
 
 interface UpdateVehicleData {
@@ -29,6 +30,7 @@ interface UpdateVehicleData {
   priority?: number;
   lot?: string;
   isFeatured?: boolean | string;
+  status?: string;
 }
 
 const getCloudinaryPublicId = (url: string): string => {
@@ -118,6 +120,7 @@ export const createVehicleService = async ({
   lot,
   isFeatured = false,
   priority = 0,
+  status = "active",
 }: CreateVehicleData) => {
   if (
     !makeId ||
@@ -131,6 +134,10 @@ export const createVehicleService = async ({
     files.length === 0
   ) {
     throw new Error("All fields are required");
+  }
+
+  if (status !== "active" && status !== "inactive") {
+    throw new Error("INVALID_STATUS");
   }
 
   const isFeaturedBool = isFeatured === true || isFeatured === "true";
@@ -156,6 +163,7 @@ export const createVehicleService = async ({
       images: imageUrls,
       lot,
       userId,
+      status,
       isFeatured: isFeaturedBool,
       priority: parseInt(priority.toString()) || 0,
     },
@@ -203,6 +211,7 @@ export const updateVehicleService = async ({
   priority,
   existingImages,
   isFeatured,
+  status,
 }: UpdateVehicleData) => {
   const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
 
@@ -219,6 +228,10 @@ export const updateVehicleService = async ({
     (lot !== undefined && !lot)
   ) {
     throw new Error("All fields are required");
+  }
+
+  if (status !== undefined && status !== "active" && status !== "inactive") {
+    throw new Error("INVALID_STATUS");
   }
 
   const isFeaturedBool =
@@ -268,6 +281,7 @@ export const updateVehicleService = async ({
       ...(location !== undefined && { location }),
       ...(price !== undefined && { price: parseFloat(price) }),
       ...(lot !== undefined && { lot }),
+      ...(status !== undefined && { status }),
       ...(priority !== undefined && {
         priority: parseInt(priority.toString()) || 0,
       }),
