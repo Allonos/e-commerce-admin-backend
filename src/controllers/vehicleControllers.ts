@@ -56,6 +56,8 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       location,
       lot,
       isFeatured = false,
+      priority = 0,
+      status = "active",
     } = req.body;
     const files = req.files as Express.Multer.File[];
 
@@ -75,11 +77,18 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       files,
       lot,
       isFeatured,
+      priority,
+      status,
       userId: req.user.id,
     });
 
     res.status(201).json({ vehicle: newVehicle });
   } catch (error) {
+    if (error instanceof Error && error.message === "INVALID_STATUS") {
+      return res
+        .status(400)
+        .json({ error: "Status must be 'active' or 'inactive'" });
+    }
     if (error instanceof Error && error.message === "All fields are required") {
       return res.status(400).json({ error: "All fields are required" });
     }
@@ -140,6 +149,8 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       lot,
       existingImages,
       isFeatured,
+      priority,
+      status,
     } = req.body;
     const files = req.files as Express.Multer.File[] | undefined;
 
@@ -154,8 +165,10 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       price,
       files,
       existingImages,
+      priority,
       lot,
       isFeatured,
+      status,
     });
 
     res.json({ vehicle: updatedVehicle });
@@ -168,6 +181,11 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
     }
     if (error instanceof Error && error.message === "All fields are required") {
       return res.status(400).json({ error: "All fields are required" });
+    }
+    if (error instanceof Error && error.message === "INVALID_STATUS") {
+      return res
+        .status(400)
+        .json({ error: "Status must be 'active' or 'inactive'" });
     }
     if (error instanceof Error && error.message === "INVALID_IMAGE_COUNT") {
       return res

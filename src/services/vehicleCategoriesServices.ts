@@ -37,11 +37,9 @@ export const deleteMakeService = async (makeId: string) => {
   return deletedMake;
 };
 
-export const getModelsByMakeService = async (makeId: string) => {
-  if (!makeId) return [];
-
+export const getModelsByMakeService = async (makeId?: string) => {
   const models = await prisma.model.findMany({
-    where: { makeId },
+    where: makeId ? { makeId } : undefined,
     select: { id: true, name: true, makeId: true },
     orderBy: { name: "asc" },
   });
