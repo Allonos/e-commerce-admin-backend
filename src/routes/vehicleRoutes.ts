@@ -19,6 +19,109 @@ const router = express.Router();
  *     tags: [Vehicles]
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: make
+ *         schema:
+ *           type: string
+ *         description: Filter vehicles by make name (case-insensitive, partial match)
+ *       - in: query
+ *         name: model
+ *         schema:
+ *           type: string
+ *         description: Filter vehicles by model name (case-insensitive, partial match)
+ *       - in: query
+ *         name: lot
+ *         schema:
+ *           type: string
+ *         description: Filter vehicles by exact lot number
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *         description: Filter vehicles by type name (case-insensitive, partial match)
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, inactive, sold]
+ *         description: Filter vehicles by status
+ *       - in: query
+ *         name: transmission
+ *         schema:
+ *           type: string
+ *           enum: [AUTOMATIC, MANUAL, SEMI_AUTOMATIC, CVT]
+ *         description: Filter vehicles by transmission type
+ *       - in: query
+ *         name: condition
+ *         schema:
+ *           type: string
+ *           enum: [NEW, USED]
+ *         description: Filter vehicles by condition
+ *       - in: query
+ *         name: fuelType
+ *         schema:
+ *           type: string
+ *           enum: [GASOLINE, DIESEL, ELECTRIC, HYBRID, PLUG_IN_HYBRID, LPG, CNG, HYDROGEN]
+ *         description: Filter vehicles by fuel type
+ *       - in: query
+ *         name: featured
+ *         schema:
+ *           type: boolean
+ *         description: Filter by featured status
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *         description: Minimum price (inclusive)
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *         description: Maximum price (inclusive)
+ *       - in: query
+ *         name: minYear
+ *         schema:
+ *           type: integer
+ *         description: Minimum year (inclusive)
+ *       - in: query
+ *         name: maxYear
+ *         schema:
+ *           type: integer
+ *         description: Maximum year (inclusive)
+ *       - in: query
+ *         name: minMileage
+ *         schema:
+ *           type: integer
+ *         description: Minimum mileage (inclusive)
+ *       - in: query
+ *         name: maxMileage
+ *         schema:
+ *           type: integer
+ *         description: Maximum mileage (inclusive)
+ *       - in: query
+ *         name: minEngine
+ *         schema:
+ *           type: integer
+ *         description: Minimum engine capacity (inclusive)
+ *       - in: query
+ *         name: maxEngine
+ *         schema:
+ *           type: integer
+ *         description: Maximum engine capacity (inclusive)
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [year, price, mileage, engine, views, priority]
+ *         description: Field to sort by
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: asc
+ *         description: Sort direction (default asc)
  *     responses:
  *       200:
  *         description: List of all vehicles

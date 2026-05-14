@@ -78,9 +78,47 @@ const uploadToCloudinary = (file: Express.Multer.File): Promise<string> =>
 export const getAllAdminsVehiclesService = async ({
   limit,
   skip,
+  makeName,
+  modelName,
+  lotNumber,
+  typeName,
+  status,
+  transmission,
+  condition,
+  fuelType,
+  featured,
+  minPrice,
+  maxPrice,
+  minYear,
+  maxYear,
+  minMileage,
+  maxMileage,
+  minEngine,
+  maxEngine,
+  sortBy,
+  sortOrder = "asc",
 }: {
   limit: number;
   skip: number;
+  makeName?: string;
+  modelName?: string;
+  lotNumber?: string;
+  typeName?: string;
+  status?: string;
+  transmission?: string;
+  condition?: string;
+  fuelType?: string;
+  featured?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  minYear?: string;
+  maxYear?: string;
+  minMileage?: string;
+  maxMileage?: string;
+  minEngine?: string;
+  maxEngine?: string;
+  sortBy?: string;
+  sortOrder?: string;
 }) => {
   const include = {
     user: { select: { username: true } },
@@ -89,38 +127,127 @@ export const getAllAdminsVehiclesService = async ({
     type: { select: { id: true, name: true } },
   };
 
+  const makeFilter = makeName
+    ? { make: { name: { contains: makeName, mode: "insensitive" as const } } }
+    : {};
+  const modelFilter = modelName
+    ? { model: { name: { contains: modelName, mode: "insensitive" as const } } }
+    : {};
+  const lotFilter = lotNumber ? { lot: lotNumber } : {};
+  const typeFilter = typeName
+    ? { type: { name: { contains: typeName, mode: "insensitive" as const } } }
+    : {};
+  const statusFilter = status ? { status } : {};
+  const transmissionFilter = transmission
+    ? { transmission: transmission as any }
+    : {};
+  const conditionFilter = condition ? { condition: condition as any } : {};
+  const fuelTypeFilter = fuelType ? { fuelType: fuelType as any } : {};
+  const featuredFilter = featured ? { isFeatured: featured === "true" } : {};
+  const priceFilter =
+    minPrice !== undefined || maxPrice !== undefined
+      ? {
+          price: {
+            ...(minPrice !== undefined && { gte: parseFloat(minPrice) }),
+            ...(maxPrice !== undefined && { lte: parseFloat(maxPrice) }),
+          },
+        }
+      : {};
+  const yearFilter =
+    minYear !== undefined || maxYear !== undefined
+      ? {
+          year: {
+            ...(minYear !== undefined && { gte: parseInt(minYear) }),
+            ...(maxYear !== undefined && { lte: parseInt(maxYear) }),
+          },
+        }
+      : {};
+  const mileageFilter =
+    minMileage !== undefined || maxMileage !== undefined
+      ? {
+          mileage: {
+            ...(minMileage !== undefined && { gte: parseInt(minMileage) }),
+            ...(maxMileage !== undefined && { lte: parseInt(maxMileage) }),
+          },
+        }
+      : {};
+  const engineFilter =
+    minEngine !== undefined || maxEngine !== undefined
+      ? {
+          engine: {
+            ...(minEngine !== undefined && { gte: parseInt(minEngine) }),
+            ...(maxEngine !== undefined && { lte: parseInt(maxEngine) }),
+          },
+        }
+      : {};
+
+  const where = {
+    ...makeFilter,
+    ...modelFilter,
+    ...lotFilter,
+    ...typeFilter,
+    ...statusFilter,
+    ...transmissionFilter,
+    ...conditionFilter,
+    ...fuelTypeFilter,
+    ...featuredFilter,
+    ...priceFilter,
+    ...yearFilter,
+    ...mileageFilter,
+    ...engineFilter,
+  };
+
+  const VALID_SORT_FIELDS = ["year", "price", "mileage", "engine", "views", "priority"];
+  const order = sortOrder === "desc" ? "desc" : "asc";
+  const customSort =
+    sortBy && VALID_SORT_FIELDS.includes(sortBy)
+      ? { [sortBy]: order as "asc" | "desc" }
+      : null;
+
   const [featuredCount, totalItems] = await Promise.all([
-    prisma.vehicle.count({ where: { isFeatured: true } }),
-    prisma.vehicle.count(),
+    prisma.vehicle.count({ where: { ...where, isFeatured: true } }),
+    prisma.vehicle.count({ where }),
   ]);
 
-  const featuredSkip = Math.min(skip, featuredCount);
-  const featuredTake = Math.min(limit, featuredCount - featuredSkip);
-  const nonFeaturedSkip = Math.max(0, skip - featuredCount);
-  const nonFeaturedTake = limit - featuredTake;
+  let rawVehicles;
 
-  const [featuredVehicles, nonFeaturedVehicles] = await Promise.all([
-    featuredTake > 0
-      ? prisma.vehicle.findMany({
-          where: { isFeatured: true },
-          include,
-          orderBy: { priority: "desc" },
-          skip: featuredSkip,
-          take: featuredTake,
-        })
-      : [],
-    nonFeaturedTake > 0
-      ? prisma.vehicle.findMany({
-          where: { isFeatured: false },
-          include,
-          orderBy: { createdAt: "desc" },
-          skip: nonFeaturedSkip,
-          take: nonFeaturedTake,
-        })
-      : [],
-  ]);
+  if (customSort) {
+    rawVehicles = await prisma.vehicle.findMany({
+      where,
+      include,
+      orderBy: customSort,
+      skip,
+      take: limit,
+    });
+  } else {
+    const featuredSkip = Math.min(skip, featuredCount);
+    const featuredTake = Math.min(limit, featuredCount - featuredSkip);
+    const nonFeaturedSkip = Math.max(0, skip - featuredCount);
+    const nonFeaturedTake = limit - featuredTake;
 
-  const rawVehicles = [...featuredVehicles, ...nonFeaturedVehicles];
+    const [featuredVehicles, nonFeaturedVehicles] = await Promise.all([
+      featuredTake > 0
+        ? prisma.vehicle.findMany({
+            where: { ...where, isFeatured: true },
+            include,
+            orderBy: { priority: "desc" },
+            skip: featuredSkip,
+            take: featuredTake,
+          })
+        : [],
+      nonFeaturedTake > 0
+        ? prisma.vehicle.findMany({
+            where: { ...where, isFeatured: false },
+            include,
+            orderBy: { createdAt: "desc" },
+            skip: nonFeaturedSkip,
+            take: nonFeaturedTake,
+          })
+        : [],
+    ]);
+
+    rawVehicles = [...featuredVehicles, ...nonFeaturedVehicles];
+  }
 
   const vehicles = rawVehicles.map(
     ({ userId, user, makeId, modelId, typeId, ...vehicleFields }) => ({
@@ -285,7 +412,10 @@ export const updateVehicleService = async ({
     throw new Error("INVALID_STATUS");
   }
 
-  if (transmission !== undefined && !VALID_TRANSMISSIONS.includes(transmission)) {
+  if (
+    transmission !== undefined &&
+    !VALID_TRANSMISSIONS.includes(transmission)
+  ) {
     throw new Error("INVALID_TRANSMISSION");
   }
 
@@ -350,7 +480,9 @@ export const updateVehicleService = async ({
       }),
       ...(updatedImages !== undefined && { images: updatedImages }),
       ...(isFeaturedBool !== undefined && { isFeatured: isFeaturedBool }),
-      ...(mileage !== undefined && { mileage: parseInt(mileage.toString()) || 0 }),
+      ...(mileage !== undefined && {
+        mileage: parseInt(mileage.toString()) || 0,
+      }),
       ...(engine !== undefined && { engine: parseInt(engine.toString()) || 0 }),
       ...(transmission !== undefined && { transmission: transmission as any }),
       ...(condition !== undefined && { condition: condition as any }),
