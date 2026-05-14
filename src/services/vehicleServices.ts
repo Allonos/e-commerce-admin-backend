@@ -14,6 +14,11 @@ interface CreateVehicleData {
   isFeatured?: boolean | string;
   priority?: number;
   status?: string;
+  mileage?: number | string;
+  engine?: number | string;
+  transmission?: string;
+  condition?: string;
+  fuelType?: string;
 }
 
 interface UpdateVehicleData {
@@ -31,7 +36,26 @@ interface UpdateVehicleData {
   lot?: string;
   isFeatured?: boolean | string;
   status?: string;
+  mileage?: number | string;
+  engine?: number | string;
+  transmission?: string;
+  condition?: string;
+  fuelType?: string;
 }
+
+const VALID_STATUSES = ["active", "inactive", "sold"];
+const VALID_TRANSMISSIONS = ["AUTOMATIC", "MANUAL", "SEMI_AUTOMATIC", "CVT"];
+const VALID_CONDITIONS = ["NEW", "USED"];
+const VALID_FUEL_TYPES = [
+  "GASOLINE",
+  "DIESEL",
+  "ELECTRIC",
+  "HYBRID",
+  "PLUG_IN_HYBRID",
+  "LPG",
+  "CNG",
+  "HYDROGEN",
+];
 
 const getCloudinaryPublicId = (url: string): string => {
   const afterUpload = url.split("/upload/")[1];
@@ -121,6 +145,11 @@ export const createVehicleService = async ({
   isFeatured = false,
   priority = 0,
   status = "active",
+  mileage = 0,
+  engine = 0,
+  transmission = "AUTOMATIC",
+  condition = "USED",
+  fuelType = "GASOLINE",
 }: CreateVehicleData) => {
   if (
     !makeId ||
@@ -136,8 +165,20 @@ export const createVehicleService = async ({
     throw new Error("All fields are required");
   }
 
-  if (status !== "active" && status !== "inactive") {
+  if (!VALID_STATUSES.includes(status!)) {
     throw new Error("INVALID_STATUS");
+  }
+
+  if (!VALID_TRANSMISSIONS.includes(transmission as string)) {
+    throw new Error("INVALID_TRANSMISSION");
+  }
+
+  if (!VALID_CONDITIONS.includes(condition as string)) {
+    throw new Error("INVALID_CONDITION");
+  }
+
+  if (!VALID_FUEL_TYPES.includes(fuelType as string)) {
+    throw new Error("INVALID_FUEL_TYPE");
   }
 
   const isFeaturedBool = isFeatured === true || isFeatured === "true";
@@ -166,6 +207,11 @@ export const createVehicleService = async ({
       status,
       isFeatured: isFeaturedBool,
       priority: parseInt(priority.toString()) || 0,
+      mileage: parseInt(mileage.toString()) || 0,
+      engine: parseInt(engine.toString()) || 0,
+      transmission: transmission as any,
+      condition: condition as any,
+      fuelType: fuelType as any,
     },
   });
 };
@@ -212,6 +258,11 @@ export const updateVehicleService = async ({
   existingImages,
   isFeatured,
   status,
+  mileage,
+  engine,
+  transmission,
+  condition,
+  fuelType,
 }: UpdateVehicleData) => {
   const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
 
@@ -230,8 +281,20 @@ export const updateVehicleService = async ({
     throw new Error("All fields are required");
   }
 
-  if (status !== undefined && status !== "active" && status !== "inactive") {
+  if (status !== undefined && !VALID_STATUSES.includes(status)) {
     throw new Error("INVALID_STATUS");
+  }
+
+  if (transmission !== undefined && !VALID_TRANSMISSIONS.includes(transmission)) {
+    throw new Error("INVALID_TRANSMISSION");
+  }
+
+  if (condition !== undefined && !VALID_CONDITIONS.includes(condition)) {
+    throw new Error("INVALID_CONDITION");
+  }
+
+  if (fuelType !== undefined && !VALID_FUEL_TYPES.includes(fuelType)) {
+    throw new Error("INVALID_FUEL_TYPE");
   }
 
   const isFeaturedBool =
@@ -287,6 +350,11 @@ export const updateVehicleService = async ({
       }),
       ...(updatedImages !== undefined && { images: updatedImages }),
       ...(isFeaturedBool !== undefined && { isFeatured: isFeaturedBool }),
+      ...(mileage !== undefined && { mileage: parseInt(mileage.toString()) || 0 }),
+      ...(engine !== undefined && { engine: parseInt(engine.toString()) || 0 }),
+      ...(transmission !== undefined && { transmission: transmission as any }),
+      ...(condition !== undefined && { condition: condition as any }),
+      ...(fuelType !== undefined && { fuelType: fuelType as any }),
     },
   });
 

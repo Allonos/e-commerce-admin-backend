@@ -47,25 +47,59 @@ model Hero {
   updatedAt DateTime @updatedAt
 }
 
+enum Transmission {
+  AUTOMATIC
+  MANUAL
+  SEMI_AUTOMATIC
+  CVT
+}
+
+enum FuelType {
+  GASOLINE
+  DIESEL
+  ELECTRIC
+  HYBRID
+  PLUG_IN_HYBRID
+  LPG
+  CNG
+  HYDROGEN
+}
+
+enum VehicleCondition {
+  NEW
+  USED
+}
+
+enum VehicleStatus {
+  ACTIVE
+  INACTIVE
+  SOLD
+}
+
 model Vehicle {
-  id         String   @id @default(uuid())
-  makeId     String
-  make       Make     @relation(fields: [makeId], references: [id])
-  modelId    String
-  model      Model    @relation(fields: [modelId], references: [id])
-  typeId     String
-  type       Type     @relation(fields: [typeId], references: [id])
-  year       Int
-  lot        String   @unique @db.VarChar(255)
-  price      Float
-  images     String[]
-  location   String   @db.VarChar(255)
-  status     String   @default("active")
-  isFeatured Boolean  @default(false)
-  views      Int      @default(0)
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  priority   Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String           @id @default(uuid())
+  makeId       String
+  make         Make             @relation(fields: [makeId], references: [id])
+  modelId      String
+  model        Model            @relation(fields: [modelId], references: [id])
+  typeId       String
+  type         Type             @relation(fields: [typeId], references: [id])
+  year         Int
+  lot          String           @unique @db.VarChar(255)
+  price        Float
+  images       String[]
+  location     String           @db.VarChar(255)
+  status       String           @default("active")
+  isFeatured   Boolean          @default(false)
+  views        Int              @default(0)
+  userId       String
+  user         User             @relation(fields: [userId], references: [id])
+  priority     Int              @default(0)
+  mileage      Int              @default(0)
+  engine       Int              @default(0)
+  transmission Transmission     @default(AUTOMATIC)
+  condition    VehicleCondition @default(USED)
+  fuelType     FuelType         @default(GASOLINE)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 }

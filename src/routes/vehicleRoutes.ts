@@ -31,6 +31,19 @@ const router = express.Router();
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Vehicle'
+ *                 totalItems:
+ *                   type: integer
+ *                   description: Total number of vehicles
+ *                 page:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 hasNextPage:
+ *                   type: boolean
+ *                 isFirstPage:
+ *                   type: boolean
+ *                 isLastPage:
+ *                   type: boolean
  *       401:
  *         description: Unauthorized
  *         content:
@@ -77,6 +90,36 @@ router.get("/", protectRoute, getAllAdminsVehicles);
  *                 type: string
  *               location:
  *                 type: string
+ *               lot:
+ *                 type: string
+ *               isFeatured:
+ *                 type: boolean
+ *                 default: false
+ *               priority:
+ *                 type: integer
+ *                 default: 0
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive, sold]
+ *                 default: active
+ *               mileage:
+ *                 type: integer
+ *                 default: 0
+ *               engine:
+ *                 type: integer
+ *                 default: 0
+ *               transmission:
+ *                 type: string
+ *                 enum: [AUTOMATIC, MANUAL, SEMI_AUTOMATIC, CVT]
+ *                 default: AUTOMATIC
+ *               condition:
+ *                 type: string
+ *                 enum: [NEW, USED]
+ *                 default: USED
+ *               fuelType:
+ *                 type: string
+ *                 enum: [GASOLINE, DIESEL, ELECTRIC, HYBRID, PLUG_IN_HYBRID, LPG, CNG, HYDROGEN]
+ *                 default: GASOLINE
  *               images:
  *                 type: array
  *                 items:
@@ -196,6 +239,28 @@ router.post(
  *                 type: string
  *               location:
  *                 type: string
+ *               lot:
+ *                 type: string
+ *               isFeatured:
+ *                 type: boolean
+ *               priority:
+ *                 type: integer
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive, sold]
+ *               mileage:
+ *                 type: integer
+ *               engine:
+ *                 type: integer
+ *               transmission:
+ *                 type: string
+ *                 enum: [AUTOMATIC, MANUAL, SEMI_AUTOMATIC, CVT]
+ *               condition:
+ *                 type: string
+ *                 enum: [NEW, USED]
+ *               fuelType:
+ *                 type: string
+ *                 enum: [GASOLINE, DIESEL, ELECTRIC, HYBRID, PLUG_IN_HYBRID, LPG, CNG, HYDROGEN]
  *               existingImages:
  *                 type: array
  *                 items:

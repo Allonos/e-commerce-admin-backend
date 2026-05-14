@@ -27,6 +27,7 @@ export const getAllAdminsVehicles = async (req: AuthRequest, res: Response) => {
       parsePagination(req.query, undefined, totalItems);
     res.status(200).json({
       vehicles,
+      totalItems,
       page,
       totalPages,
       hasNextPage,
@@ -58,6 +59,11 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       isFeatured = false,
       priority = 0,
       status = "active",
+      mileage = 0,
+      engine = 0,
+      transmission = "AUTOMATIC",
+      condition = "USED",
+      fuelType = "GASOLINE",
     } = req.body;
     const files = req.files as Express.Multer.File[];
 
@@ -80,6 +86,11 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       priority,
       status,
       userId: req.user.id,
+      mileage,
+      engine,
+      transmission,
+      condition,
+      fuelType,
     });
 
     res.status(201).json({ vehicle: newVehicle });
@@ -87,7 +98,16 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
     if (error instanceof Error && error.message === "INVALID_STATUS") {
       return res
         .status(400)
-        .json({ error: "Status must be 'active' or 'inactive'" });
+        .json({ error: "Status must be 'active', 'inactive', or 'sold'" });
+    }
+    if (error instanceof Error && error.message === "INVALID_TRANSMISSION") {
+      return res.status(400).json({ error: "Invalid transmission value" });
+    }
+    if (error instanceof Error && error.message === "INVALID_CONDITION") {
+      return res.status(400).json({ error: "Condition must be 'NEW' or 'USED'" });
+    }
+    if (error instanceof Error && error.message === "INVALID_FUEL_TYPE") {
+      return res.status(400).json({ error: "Invalid fuel type value" });
     }
     if (error instanceof Error && error.message === "All fields are required") {
       return res.status(400).json({ error: "All fields are required" });
@@ -151,6 +171,11 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       isFeatured,
       priority,
       status,
+      mileage,
+      engine,
+      transmission,
+      condition,
+      fuelType,
     } = req.body;
     const files = req.files as Express.Multer.File[] | undefined;
 
@@ -169,6 +194,11 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       lot,
       isFeatured,
       status,
+      mileage,
+      engine,
+      transmission,
+      condition,
+      fuelType,
     });
 
     res.json({ vehicle: updatedVehicle });
@@ -185,7 +215,16 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
     if (error instanceof Error && error.message === "INVALID_STATUS") {
       return res
         .status(400)
-        .json({ error: "Status must be 'active' or 'inactive'" });
+        .json({ error: "Status must be 'active', 'inactive', or 'sold'" });
+    }
+    if (error instanceof Error && error.message === "INVALID_TRANSMISSION") {
+      return res.status(400).json({ error: "Invalid transmission value" });
+    }
+    if (error instanceof Error && error.message === "INVALID_CONDITION") {
+      return res.status(400).json({ error: "Condition must be 'NEW' or 'USED'" });
+    }
+    if (error instanceof Error && error.message === "INVALID_FUEL_TYPE") {
+      return res.status(400).json({ error: "Invalid fuel type value" });
     }
     if (error instanceof Error && error.message === "INVALID_IMAGE_COUNT") {
       return res
