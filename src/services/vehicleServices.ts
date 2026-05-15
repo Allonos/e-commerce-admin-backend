@@ -8,7 +8,8 @@ interface CreateVehicleData {
   year: string;
   price: string;
   lot: number;
-  location: string;
+  cityId: string;
+  location?: never;
   files: Express.Multer.File[] | undefined;
   userId: string;
   isFeatured?: boolean | string;
@@ -28,7 +29,7 @@ interface UpdateVehicleData {
   typeId?: string;
   modelId?: string;
   year?: string;
-  location?: string;
+  cityId?: string;
   price?: string;
   files?: Express.Multer.File[];
   existingImages?: string | string[];
@@ -78,6 +79,8 @@ const uploadToCloudinary = (file: Express.Multer.File): Promise<string> =>
 export const getAllAdminsVehiclesService = async ({
   limit,
   skip,
+  cityName,
+  countryName,
   makeName,
   modelName,
   lotNumber,
@@ -100,6 +103,8 @@ export const getAllAdminsVehiclesService = async ({
 }: {
   limit: number;
   skip: number;
+  cityName?: string;
+  countryName?: string;
   makeName?: string;
   modelName?: string;
   lotNumber?: number;
@@ -125,8 +130,15 @@ export const getAllAdminsVehiclesService = async ({
     make: { select: { id: true, name: true } },
     model: { select: { id: true, name: true } },
     type: { select: { id: true, name: true } },
+    city: { select: { id: true, name: true, country: { select: { id: true, name: true } } } },
   };
 
+  const cityFilter = cityName
+    ? { city: { name: { contains: cityName, mode: "insensitive" as const } } }
+    : {};
+  const countryFilter = countryName
+    ? { city: { country: { name: { contains: countryName, mode: "insensitive" as const } } } }
+    : {};
   const makeFilter = makeName
     ? { make: { name: { contains: makeName, mode: "insensitive" as const } } }
     : {};
@@ -182,6 +194,8 @@ export const getAllAdminsVehiclesService = async ({
       : {};
 
   const where = {
+    ...cityFilter,
+    ...countryFilter,
     ...makeFilter,
     ...modelFilter,
     ...lotFilter,
@@ -250,7 +264,7 @@ export const getAllAdminsVehiclesService = async ({
   }
 
   const vehicles = rawVehicles.map(
-    ({ userId, user, makeId, modelId, typeId, ...vehicleFields }) => ({
+    ({ userId, user, makeId, modelId, typeId, cityId, ...vehicleFields }) => ({
       ...vehicleFields,
       owner: { id: userId, username: user.username },
     }),
@@ -265,7 +279,7 @@ export const createVehicleService = async ({
   modelId,
   year,
   price,
-  location,
+  cityId,
   files,
   userId,
   lot,
@@ -284,7 +298,7 @@ export const createVehicleService = async ({
     !modelId ||
     !year ||
     !price ||
-    !location ||
+    !cityId ||
     !files ||
     !lot ||
     files.length === 0
@@ -327,7 +341,7 @@ export const createVehicleService = async ({
       modelId,
       year: parseInt(year),
       price: parseFloat(price),
-      location,
+      cityId,
       images: imageUrls,
       lot,
       userId,
@@ -377,7 +391,7 @@ export const updateVehicleService = async ({
   typeId,
   modelId,
   year,
-  location,
+  cityId,
   price,
   files,
   lot,
@@ -402,7 +416,7 @@ export const updateVehicleService = async ({
     (modelId !== undefined && !modelId) ||
     (year !== undefined && !year) ||
     (price !== undefined && !price) ||
-    (location !== undefined && !location) ||
+    (cityId !== undefined && !cityId) ||
     (lot !== undefined && !lot)
   ) {
     throw new Error("All fields are required");
@@ -471,7 +485,7 @@ export const updateVehicleService = async ({
       ...(typeId !== undefined && { typeId }),
       ...(modelId !== undefined && { modelId }),
       ...(year !== undefined && { year: parseInt(year) }),
-      ...(location !== undefined && { location }),
+      ...(cityId !== undefined && { cityId }),
       ...(price !== undefined && { price: parseFloat(price) }),
       ...(lot !== undefined && { lot }),
       ...(status !== undefined && { status }),
@@ -509,11 +523,12 @@ export const getVehicleByIdService = async (vehicleId: string) => {
       make: { select: { id: true, name: true } },
       model: { select: { id: true, name: true } },
       type: { select: { id: true, name: true } },
+      city: { select: { id: true, name: true, country: { select: { id: true, name: true } } } },
     },
   });
 
   if (!result) throw new Error("Vehicle not found");
 
-  const { userId, user, makeId, modelId, typeId, ...vehicle } = result;
+  const { userId, user, makeId, modelId, typeId, cityId, ...vehicle } = result;
   return { ...vehicle, owner: { id: userId, username: user.username } };
 };

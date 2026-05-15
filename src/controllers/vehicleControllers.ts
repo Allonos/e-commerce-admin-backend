@@ -18,6 +18,8 @@ export const getAllAdminsVehicles = async (req: AuthRequest, res: Response) => {
     }
 
     const { limit, skip } = parsePagination(req.query);
+    const cityName = req.query.city as string | undefined;
+    const countryName = req.query.country as string | undefined;
     const makeName = req.query.make as string | undefined;
     const modelName = req.query.model as string | undefined;
     const lotNumber = req.query.lot ? parseInt(req.query.lot as string) : undefined;
@@ -41,6 +43,8 @@ export const getAllAdminsVehicles = async (req: AuthRequest, res: Response) => {
     const { vehicles, totalItems } = await getAllAdminsVehiclesService({
       limit,
       skip,
+      cityName,
+      countryName,
       makeName,
       modelName,
       lotNumber,
@@ -92,7 +96,7 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       modelId,
       year,
       price,
-      location,
+      cityId,
       lot,
       isFeatured = false,
       priority = 0,
@@ -117,7 +121,7 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       modelId,
       year,
       price,
-      location,
+      cityId,
       files,
       lot: lot !== undefined ? parseInt(lot) : lot,
       isFeatured,
@@ -204,7 +208,7 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       typeId,
       modelId,
       year,
-      location,
+      cityId,
       price,
       lot,
       existingImages,
@@ -226,7 +230,7 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       typeId,
       modelId,
       year,
-      location,
+      cityId,
       price,
       files,
       existingImages,

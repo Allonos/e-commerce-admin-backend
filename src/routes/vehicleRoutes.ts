@@ -21,6 +21,16 @@ const router = express.Router();
  *       - cookieAuth: []
  *     parameters:
  *       - in: query
+ *         name: city
+ *         schema:
+ *           type: string
+ *         description: Filter vehicles by city name (case-insensitive, partial match)
+ *       - in: query
+ *         name: country
+ *         schema:
+ *           type: string
+ *         description: Filter vehicles by country name (case-insensitive, partial match)
+ *       - in: query
  *         name: make
  *         schema:
  *           type: string
@@ -176,7 +186,7 @@ router.get("/", protectRoute, getAllAdminsVehicles);
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required: [makeId, typeId, modelId, year, price, location, lot, images]
+ *             required: [makeId, typeId, modelId, year, price, cityId, lot, images]
  *             properties:
  *               makeId:
  *                 type: string
@@ -191,8 +201,9 @@ router.get("/", protectRoute, getAllAdminsVehicles);
  *                 type: integer
  *               price:
  *                 type: string
- *               location:
+ *               cityId:
  *                 type: string
+ *                 description: ID of the City
  *               lot:
  *                 type: integer
  *               isFeatured:
@@ -340,8 +351,9 @@ router.post(
  *                 type: integer
  *               price:
  *                 type: string
- *               location:
+ *               cityId:
  *                 type: string
+ *                 description: ID of the City
  *               lot:
  *                 type: integer
  *               isFeatured:

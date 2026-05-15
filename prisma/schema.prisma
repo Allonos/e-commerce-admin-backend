@@ -17,6 +17,20 @@ model User {
   updatedAt DateTime  @updatedAt
 }
 
+model Country {
+  id     String @id @default(uuid())
+  name   String @unique
+  cities City[]
+}
+
+model City {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  countryId String
+  country   Country   @relation(fields: [countryId], references: [id])
+  vehicles  Vehicle[]
+}
+
 model Make {
   id       String    @id @default(uuid())
   name     String    @unique
@@ -88,7 +102,8 @@ model Vehicle {
   lot          Int              @unique
   price        Float
   images       String[]
-  location     String           @db.VarChar(255)
+  cityId       String
+  city         City             @relation(fields: [cityId], references: [id])
   status       String           @default("active")
   isFeatured   Boolean          @default(false)
   views        Int              @default(0)

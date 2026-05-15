@@ -35,7 +35,6 @@ const options: swaggerJsdoc.Options = {
             year: { type: "integer" },
             lot: { type: "integer" },
             price: { type: "number" },
-            location: { type: "string" },
             images: {
               type: "array",
               items: { type: "string" },
@@ -61,7 +60,20 @@ const options: swaggerJsdoc.Options = {
               enum: ["GASOLINE", "DIESEL", "ELECTRIC", "HYBRID", "PLUG_IN_HYBRID", "LPG", "CNG", "HYDROGEN"],
               default: "GASOLINE",
             },
-            userId: { type: "string" },
+            city: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                name: { type: "string" },
+                country: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    name: { type: "string" },
+                  },
+                },
+              },
+            },
             createdAt: { type: "string", format: "date-time" },
             updatedAt: { type: "string", format: "date-time" },
           },

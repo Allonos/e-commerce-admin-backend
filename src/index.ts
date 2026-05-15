@@ -8,6 +8,7 @@ import userRoutes from "./routes/userRoutes";
 import vehicleRoutes from "./routes/vehicleRoutes";
 import vehicelCategoriesRoutes from "./routes/vehicleCategoriesRoutes";
 import heroVehiclesRoutes from "./routes/heroVehiclesRoutes";
+import locationRoutes from "./routes/locationRoutes";
 import { swaggerSpec } from "./lib/swagger";
 
 dotenv.config();
@@ -31,6 +32,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/vehicles/categories", vehicelCategoriesRoutes);
 app.use("/api/hero-vehicles", heroVehiclesRoutes);
+app.use("/api/locations", locationRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
