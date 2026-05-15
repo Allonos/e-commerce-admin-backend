@@ -1,8 +1,12 @@
 -- Add temporary integer column
 ALTER TABLE "Vehicle" ADD COLUMN "lot_new" INTEGER;
 
--- Extract the numeric part from existing lot values (e.g. "LOT-001" -> 1)
-UPDATE "Vehicle" SET "lot_new" = CAST(REGEXP_REPLACE(lot, '[^0-9]', '', 'g') AS INTEGER);
+-- Extract numeric part from existing lot values, default to 0 if empty/unparseable
+UPDATE "Vehicle"
+SET "lot_new" = CASE
+  WHEN REGEXP_REPLACE(lot, '[^0-9]', '', 'g') = '' THEN 0
+  ELSE CAST(REGEXP_REPLACE(lot, '[^0-9]', '', 'g') AS INTEGER)
+END;
 
 -- Drop old string column and unique index
 DROP INDEX "Vehicle_lot_key";
