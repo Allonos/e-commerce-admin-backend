@@ -29,17 +29,53 @@ const options: swaggerJsdoc.Options = {
           type: "object",
           properties: {
             id: { type: "string" },
-            makes: { type: "string" },
+            make: { type: "string" },
             type: { type: "string" },
             model: { type: "string" },
-            year: { type: "string" },
-            price: { type: "string" },
-            location: { type: "string" },
+            year: { type: "integer" },
+            lot: { type: "integer" },
+            price: { type: "number" },
             images: {
               type: "array",
               items: { type: "string" },
             },
-            userId: { type: "string" },
+            status: { type: "string", enum: ["active", "inactive", "sold"], default: "active" },
+            isFeatured: { type: "boolean", default: false },
+            priority: { type: "integer", default: 0 },
+            views: { type: "integer", default: 0 },
+            mileage: { type: "integer", default: 0 },
+            engine: { type: "integer", default: 0 },
+            transmission: {
+              type: "string",
+              enum: ["AUTOMATIC", "MANUAL", "SEMI_AUTOMATIC", "CVT"],
+              default: "AUTOMATIC",
+            },
+            condition: {
+              type: "string",
+              enum: ["NEW", "USED"],
+              default: "USED",
+            },
+            fuelType: {
+              type: "string",
+              enum: ["GASOLINE", "DIESEL", "ELECTRIC", "HYBRID", "PLUG_IN_HYBRID", "LPG", "CNG", "HYDROGEN"],
+              default: "GASOLINE",
+            },
+            city: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                name: { type: "string" },
+                country: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    name: { type: "string" },
+                  },
+                },
+              },
+            },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
           },
         },
         HeroVehicle: {

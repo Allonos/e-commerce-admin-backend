@@ -18,15 +18,58 @@ export const getAllAdminsVehicles = async (req: AuthRequest, res: Response) => {
     }
 
     const { limit, skip } = parsePagination(req.query);
+    const cityName = req.query.city as string | undefined;
+    const countryName = req.query.country as string | undefined;
+    const makeName = req.query.make as string | undefined;
+    const modelName = req.query.model as string | undefined;
+    const lotNumber = req.query.lot ? parseInt(req.query.lot as string) : undefined;
+    const typeName = req.query.type as string | undefined;
+    const status = req.query.status as string | undefined;
+    const transmission = req.query.transmission as string | undefined;
+    const condition = req.query.condition as string | undefined;
+    const fuelType = req.query.fuelType as string | undefined;
+    const featured = req.query.featured as string | undefined;
+    const minPrice = req.query.minPrice as string | undefined;
+    const maxPrice = req.query.maxPrice as string | undefined;
+    const minYear = req.query.minYear as string | undefined;
+    const maxYear = req.query.maxYear as string | undefined;
+    const minMileage = req.query.minMileage as string | undefined;
+    const maxMileage = req.query.maxMileage as string | undefined;
+    const minEngine = req.query.minEngine as string | undefined;
+    const maxEngine = req.query.maxEngine as string | undefined;
+    const sortBy = req.query.sortBy as string | undefined;
+    const sortOrder = req.query.sortOrder as string | undefined;
 
     const { vehicles, totalItems } = await getAllAdminsVehiclesService({
       limit,
       skip,
+      cityName,
+      countryName,
+      makeName,
+      modelName,
+      lotNumber,
+      typeName,
+      status,
+      transmission,
+      condition,
+      fuelType,
+      featured,
+      minPrice,
+      maxPrice,
+      minYear,
+      maxYear,
+      minMileage,
+      maxMileage,
+      minEngine,
+      maxEngine,
+      sortBy,
+      sortOrder,
     });
     const { page, totalPages, hasNextPage, isFirstPage, isLastPage } =
       parsePagination(req.query, undefined, totalItems);
     res.status(200).json({
       vehicles,
+      totalItems,
       page,
       totalPages,
       hasNextPage,
@@ -53,11 +96,16 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       modelId,
       year,
       price,
-      location,
+      cityId,
       lot,
       isFeatured = false,
       priority = 0,
       status = "active",
+      mileage = 0,
+      engine = 0,
+      transmission = "AUTOMATIC",
+      condition = "USED",
+      fuelType = "GASOLINE",
     } = req.body;
     const files = req.files as Express.Multer.File[];
 
@@ -73,13 +121,18 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       modelId,
       year,
       price,
-      location,
+      cityId,
       files,
-      lot,
+      lot: lot !== undefined ? parseInt(lot) : lot,
       isFeatured,
       priority,
       status,
       userId: req.user.id,
+      mileage,
+      engine,
+      transmission,
+      condition,
+      fuelType,
     });
 
     res.status(201).json({ vehicle: newVehicle });
@@ -87,7 +140,18 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
     if (error instanceof Error && error.message === "INVALID_STATUS") {
       return res
         .status(400)
-        .json({ error: "Status must be 'active' or 'inactive'" });
+        .json({ error: "Status must be 'active', 'inactive', or 'sold'" });
+    }
+    if (error instanceof Error && error.message === "INVALID_TRANSMISSION") {
+      return res.status(400).json({ error: "Invalid transmission value" });
+    }
+    if (error instanceof Error && error.message === "INVALID_CONDITION") {
+      return res
+        .status(400)
+        .json({ error: "Condition must be 'NEW' or 'USED'" });
+    }
+    if (error instanceof Error && error.message === "INVALID_FUEL_TYPE") {
+      return res.status(400).json({ error: "Invalid fuel type value" });
     }
     if (error instanceof Error && error.message === "All fields are required") {
       return res.status(400).json({ error: "All fields are required" });
@@ -144,13 +208,18 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       typeId,
       modelId,
       year,
-      location,
+      cityId,
       price,
       lot,
       existingImages,
       isFeatured,
       priority,
       status,
+      mileage,
+      engine,
+      transmission,
+      condition,
+      fuelType,
     } = req.body;
     const files = req.files as Express.Multer.File[] | undefined;
 
@@ -161,14 +230,19 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       typeId,
       modelId,
       year,
-      location,
+      cityId,
       price,
       files,
       existingImages,
       priority,
-      lot,
+      lot: lot !== undefined ? parseInt(lot) : undefined,
       isFeatured,
       status,
+      mileage,
+      engine,
+      transmission,
+      condition,
+      fuelType,
     });
 
     res.json({ vehicle: updatedVehicle });
@@ -185,7 +259,18 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
     if (error instanceof Error && error.message === "INVALID_STATUS") {
       return res
         .status(400)
-        .json({ error: "Status must be 'active' or 'inactive'" });
+        .json({ error: "Status must be 'active', 'inactive', or 'sold'" });
+    }
+    if (error instanceof Error && error.message === "INVALID_TRANSMISSION") {
+      return res.status(400).json({ error: "Invalid transmission value" });
+    }
+    if (error instanceof Error && error.message === "INVALID_CONDITION") {
+      return res
+        .status(400)
+        .json({ error: "Condition must be 'NEW' or 'USED'" });
+    }
+    if (error instanceof Error && error.message === "INVALID_FUEL_TYPE") {
+      return res.status(400).json({ error: "Invalid fuel type value" });
     }
     if (error instanceof Error && error.message === "INVALID_IMAGE_COUNT") {
       return res
