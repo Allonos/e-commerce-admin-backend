@@ -20,7 +20,7 @@ export const getAllAdminsVehicles = async (req: AuthRequest, res: Response) => {
     const { limit, skip } = parsePagination(req.query);
     const makeName = req.query.make as string | undefined;
     const modelName = req.query.model as string | undefined;
-    const lotNumber = req.query.lot as string | undefined;
+    const lotNumber = req.query.lot ? parseInt(req.query.lot as string) : undefined;
     const typeName = req.query.type as string | undefined;
     const status = req.query.status as string | undefined;
     const transmission = req.query.transmission as string | undefined;
@@ -119,7 +119,7 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       price,
       location,
       files,
-      lot,
+      lot: lot !== undefined ? parseInt(lot) : lot,
       isFeatured,
       priority,
       status,
@@ -231,7 +231,7 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       files,
       existingImages,
       priority,
-      lot,
+      lot: lot !== undefined ? parseInt(lot) : undefined,
       isFeatured,
       status,
       mileage,

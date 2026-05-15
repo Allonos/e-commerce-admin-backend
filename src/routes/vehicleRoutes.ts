@@ -33,7 +33,7 @@ const router = express.Router();
  *       - in: query
  *         name: lot
  *         schema:
- *           type: string
+ *           type: integer
  *         description: Filter vehicles by exact lot number
  *       - in: query
  *         name: type
@@ -113,7 +113,7 @@ const router = express.Router();
  *         name: sortBy
  *         schema:
  *           type: string
- *           enum: [year, price, mileage, engine, views, priority]
+ *           enum: [year, price, mileage, engine, views, priority, lot]
  *         description: Field to sort by
  *       - in: query
  *         name: sortOrder
@@ -194,7 +194,7 @@ router.get("/", protectRoute, getAllAdminsVehicles);
  *               location:
  *                 type: string
  *               lot:
- *                 type: string
+ *                 type: integer
  *               isFeatured:
  *                 type: boolean
  *                 default: false
@@ -343,7 +343,7 @@ router.post(
  *               location:
  *                 type: string
  *               lot:
- *                 type: string
+ *                 type: integer
  *               isFeatured:
  *                 type: boolean
  *               priority:

@@ -33,7 +33,7 @@ const options: swaggerJsdoc.Options = {
             type: { type: "string" },
             model: { type: "string" },
             year: { type: "integer" },
-            lot: { type: "string" },
+            lot: { type: "integer" },
             price: { type: "number" },
             location: { type: "string" },
             images: {

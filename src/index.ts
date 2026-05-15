@@ -37,10 +37,3 @@ app.listen(PORT, () => {
 });
 
 export default app;
-
-// {
-//   "watch": ["src"],
-//   "ext": "ts,json",
-//   "ignore": ["src/**/*.spec.ts"],
-//   "exec": "ts-node --transpile-only src/index.ts"
-// }

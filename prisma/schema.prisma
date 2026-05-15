@@ -85,7 +85,7 @@ model Vehicle {
   typeId       String
   type         Type             @relation(fields: [typeId], references: [id])
   year         Int
-  lot          String           @unique @db.VarChar(255)
+  lot          Int              @unique
   price        Float
   images       String[]
   location     String           @db.VarChar(255)

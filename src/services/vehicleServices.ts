@@ -7,7 +7,7 @@ interface CreateVehicleData {
   modelId: string;
   year: string;
   price: string;
-  lot: string;
+  lot: number;
   location: string;
   files: Express.Multer.File[] | undefined;
   userId: string;
@@ -33,7 +33,7 @@ interface UpdateVehicleData {
   files?: Express.Multer.File[];
   existingImages?: string | string[];
   priority?: number;
-  lot?: string;
+  lot?: number;
   isFeatured?: boolean | string;
   status?: string;
   mileage?: number | string;
@@ -102,7 +102,7 @@ export const getAllAdminsVehiclesService = async ({
   skip: number;
   makeName?: string;
   modelName?: string;
-  lotNumber?: string;
+  lotNumber?: number;
   typeName?: string;
   status?: string;
   transmission?: string;
@@ -197,7 +197,7 @@ export const getAllAdminsVehiclesService = async ({
     ...engineFilter,
   };
 
-  const VALID_SORT_FIELDS = ["year", "price", "mileage", "engine", "views", "priority"];
+  const VALID_SORT_FIELDS = ["year", "price", "mileage", "engine", "views", "priority", "lot"];
   const order = sortOrder === "desc" ? "desc" : "asc";
   const customSort =
     sortBy && VALID_SORT_FIELDS.includes(sortBy)
