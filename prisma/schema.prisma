@@ -99,7 +99,7 @@ model Vehicle {
   typeId       String
   type         Type             @relation(fields: [typeId], references: [id])
   year         Int
-  lot          Int              @unique
+  lot          Int              @default(autoincrement()) @unique
   price        Float
   images       String[]
   cityId       String
