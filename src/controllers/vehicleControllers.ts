@@ -22,7 +22,9 @@ export const getAllAdminsVehicles = async (req: AuthRequest, res: Response) => {
     const countryName = req.query.country as string | undefined;
     const makeName = req.query.make as string | undefined;
     const modelName = req.query.model as string | undefined;
-    const lotNumber = req.query.lot ? parseInt(req.query.lot as string) : undefined;
+    const lotNumber = req.query.lot
+      ? parseInt(req.query.lot as string)
+      : undefined;
     const typeName = req.query.type as string | undefined;
     const status = req.query.status as string | undefined;
     const transmission = req.query.transmission as string | undefined;
@@ -97,7 +99,6 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       year,
       price,
       cityId,
-      lot,
       isFeatured = false,
       priority = 0,
       status = "active",
@@ -123,7 +124,6 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
       price,
       cityId,
       files,
-      lot: lot !== undefined ? parseInt(lot) : lot,
       isFeatured,
       priority,
       status,
@@ -155,14 +155,6 @@ export const createVehicle = async (req: AuthRequest, res: Response) => {
     }
     if (error instanceof Error && error.message === "All fields are required") {
       return res.status(400).json({ error: "All fields are required" });
-    }
-    if (
-      error instanceof Error &&
-      error.message === "A vehicle with this lot already exists"
-    ) {
-      return res
-        .status(400)
-        .json({ error: "A vehicle with this lot already exists" });
     }
     console.error("Error creating vehicle:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -210,7 +202,6 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       year,
       cityId,
       price,
-      lot,
       existingImages,
       isFeatured,
       priority,
@@ -235,7 +226,6 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       files,
       existingImages,
       priority,
-      lot: lot !== undefined ? parseInt(lot) : undefined,
       isFeatured,
       status,
       mileage,
@@ -276,14 +266,6 @@ export const updateVehicle = async (req: AuthRequest, res: Response) => {
       return res
         .status(400)
         .json({ error: "Vehicle must have between 1 and 4 images" });
-    }
-    if (
-      error instanceof Error &&
-      error.message === "A vehicle with this lot already exists"
-    ) {
-      return res
-        .status(400)
-        .json({ error: "A vehicle with this lot already exists" });
     }
     console.error("Error updating vehicle:", error);
     res.status(500).json({ error: "Internal server error" });

@@ -8,7 +8,6 @@ interface CreateVehicleData {
   modelId: string;
   year: string;
   price: string;
-  lot: number;
   cityId: string;
   location?: never;
   files: Express.Multer.File[] | undefined;
@@ -35,7 +34,6 @@ interface UpdateVehicleData {
   files?: Express.Multer.File[];
   existingImages?: string | string[];
   priority?: number;
-  lot?: number;
   isFeatured?: boolean | string;
   status?: string;
   mileage?: number | string;
@@ -131,7 +129,13 @@ export const getAllAdminsVehiclesService = async ({
     make: { select: { id: true, name: true } },
     model: { select: { id: true, name: true } },
     type: { select: { id: true, name: true } },
-    city: { select: { id: true, name: true, country: { select: { id: true, name: true } } } },
+    city: {
+      select: {
+        id: true,
+        name: true,
+        country: { select: { id: true, name: true } },
+      },
+    },
   };
 
   const where: Prisma.VehicleWhereInput = {};
@@ -139,17 +143,26 @@ export const getAllAdminsVehiclesService = async ({
   if (cityName || countryName) {
     where.city = {
       ...(cityName && { name: { contains: cityName, mode: "insensitive" } }),
-      ...(countryName && { country: { name: { contains: countryName, mode: "insensitive" } } }),
+      ...(countryName && {
+        country: { name: { contains: countryName, mode: "insensitive" } },
+      }),
     };
   }
-  if (makeName) where.make = { name: { contains: makeName, mode: "insensitive" } };
-  if (modelName) where.model = { name: { contains: modelName, mode: "insensitive" } };
+  if (makeName)
+    where.make = { name: { contains: makeName, mode: "insensitive" } };
+  if (modelName)
+    where.model = { name: { contains: modelName, mode: "insensitive" } };
   if (lotNumber) where.lot = lotNumber;
-  if (typeName) where.type = { name: { contains: typeName, mode: "insensitive" } };
+  if (typeName)
+    where.type = { name: { contains: typeName, mode: "insensitive" } };
   if (status) where.status = status;
-  if (transmission) where.transmission = transmission as Prisma.EnumTransmissionFilter<"Vehicle">;
-  if (condition) where.condition = condition as Prisma.EnumVehicleConditionFilter<"Vehicle">;
-  if (fuelType) where.fuelType = fuelType as Prisma.EnumFuelTypeFilter<"Vehicle">;
+  if (transmission)
+    where.transmission =
+      transmission as Prisma.EnumTransmissionFilter<"Vehicle">;
+  if (condition)
+    where.condition = condition as Prisma.EnumVehicleConditionFilter<"Vehicle">;
+  if (fuelType)
+    where.fuelType = fuelType as Prisma.EnumFuelTypeFilter<"Vehicle">;
   if (featured) where.isFeatured = featured === "true";
   if (minPrice !== undefined || maxPrice !== undefined) {
     where.price = {
@@ -176,8 +189,16 @@ export const getAllAdminsVehiclesService = async ({
     };
   }
 
-  const VALID_SORT_FIELDS = ["year", "price", "mileage", "engine", "views", "priority", "lot"] as const;
-  type SortField = typeof VALID_SORT_FIELDS[number];
+  const VALID_SORT_FIELDS = [
+    "year",
+    "price",
+    "mileage",
+    "engine",
+    "views",
+    "priority",
+    "lot",
+  ] as const;
+  type SortField = (typeof VALID_SORT_FIELDS)[number];
   const order = sortOrder === "desc" ? "desc" : "asc";
   const customSort: Prisma.VehicleOrderByWithRelationInput | null =
     sortBy && (VALID_SORT_FIELDS as readonly string[]).includes(sortBy)
@@ -191,11 +212,11 @@ export const getAllAdminsVehiclesService = async ({
 
   let rawVehicles;
 
-  if (customSort) {
+  if (customSort || where.isFeatured !== undefined) {
     rawVehicles = await prisma.vehicle.findMany({
       where,
       include,
-      orderBy: customSort,
+      ...(customSort && { orderBy: customSort }),
       skip,
       take: limit,
     });
@@ -248,7 +269,6 @@ export const createVehicleService = async ({
   cityId,
   files,
   userId,
-  lot,
   isFeatured = false,
   priority = 0,
   status = "active",
@@ -266,7 +286,6 @@ export const createVehicleService = async ({
     !price ||
     !cityId ||
     !files ||
-    !lot ||
     files.length === 0
   ) {
     throw new Error("All fields are required");
@@ -290,14 +309,6 @@ export const createVehicleService = async ({
 
   const isFeaturedBool = isFeatured === true || isFeatured === "true";
 
-  const existingVehicleWithLot = await prisma.vehicle.findUnique({
-    where: { lot },
-  });
-
-  if (existingVehicleWithLot) {
-    throw new Error("A vehicle with this lot already exists");
-  }
-
   const imageUrls = await Promise.all(files.map(uploadToCloudinary));
 
   return prisma.vehicle.create({
@@ -309,7 +320,6 @@ export const createVehicleService = async ({
       price: parseFloat(price),
       cityId,
       images: imageUrls,
-      lot,
       userId,
       status,
       isFeatured: isFeaturedBool,
@@ -360,7 +370,6 @@ export const updateVehicleService = async ({
   cityId,
   price,
   files,
-  lot,
   priority,
   existingImages,
   isFeatured,
@@ -382,8 +391,7 @@ export const updateVehicleService = async ({
     (modelId !== undefined && !modelId) ||
     (year !== undefined && !year) ||
     (price !== undefined && !price) ||
-    (cityId !== undefined && !cityId) ||
-    (lot !== undefined && !lot)
+    (cityId !== undefined && !cityId)
   ) {
     throw new Error("All fields are required");
   }
@@ -411,15 +419,6 @@ export const updateVehicleService = async ({
     isFeatured !== undefined
       ? isFeatured === true || isFeatured === "true"
       : undefined;
-
-  if (lot && lot !== vehicle.lot) {
-    const existingVehicleWithLot = await prisma.vehicle.findUnique({
-      where: { lot },
-    });
-    if (existingVehicleWithLot) {
-      throw new Error("A vehicle with this lot already exists");
-    }
-  }
 
   let updatedImages: string[] | undefined;
   let removedImages: string[] = [];
@@ -453,7 +452,6 @@ export const updateVehicleService = async ({
       ...(year !== undefined && { year: parseInt(year) }),
       ...(cityId !== undefined && { cityId }),
       ...(price !== undefined && { price: parseFloat(price) }),
-      ...(lot !== undefined && { lot }),
       ...(status !== undefined && { status }),
       ...(priority !== undefined && {
         priority: parseInt(priority.toString()) || 0,
@@ -489,7 +487,13 @@ export const getVehicleByIdService = async (vehicleId: string) => {
       make: { select: { id: true, name: true } },
       model: { select: { id: true, name: true } },
       type: { select: { id: true, name: true } },
-      city: { select: { id: true, name: true, country: { select: { id: true, name: true } } } },
+      city: {
+        select: {
+          id: true,
+          name: true,
+          country: { select: { id: true, name: true } },
+        },
+      },
     },
   });
 
