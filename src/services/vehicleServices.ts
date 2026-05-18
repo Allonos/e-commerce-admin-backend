@@ -1,5 +1,6 @@
 import cloudinary from "../lib/cloudinary";
 import prisma from "../lib/prisma";
+import { Prisma } from "../generated/prisma/client";
 
 interface CreateVehicleData {
   makeId: string;
@@ -133,89 +134,54 @@ export const getAllAdminsVehiclesService = async ({
     city: { select: { id: true, name: true, country: { select: { id: true, name: true } } } },
   };
 
-  const cityFilter = cityName
-    ? { city: { name: { contains: cityName, mode: "insensitive" as const } } }
-    : {};
-  const countryFilter = countryName
-    ? { city: { country: { name: { contains: countryName, mode: "insensitive" as const } } } }
-    : {};
-  const makeFilter = makeName
-    ? { make: { name: { contains: makeName, mode: "insensitive" as const } } }
-    : {};
-  const modelFilter = modelName
-    ? { model: { name: { contains: modelName, mode: "insensitive" as const } } }
-    : {};
-  const lotFilter = lotNumber ? { lot: lotNumber } : {};
-  const typeFilter = typeName
-    ? { type: { name: { contains: typeName, mode: "insensitive" as const } } }
-    : {};
-  const statusFilter = status ? { status } : {};
-  const transmissionFilter = transmission
-    ? { transmission: transmission as any }
-    : {};
-  const conditionFilter = condition ? { condition: condition as any } : {};
-  const fuelTypeFilter = fuelType ? { fuelType: fuelType as any } : {};
-  const featuredFilter = featured ? { isFeatured: featured === "true" } : {};
-  const priceFilter =
-    minPrice !== undefined || maxPrice !== undefined
-      ? {
-          price: {
-            ...(minPrice !== undefined && { gte: parseFloat(minPrice) }),
-            ...(maxPrice !== undefined && { lte: parseFloat(maxPrice) }),
-          },
-        }
-      : {};
-  const yearFilter =
-    minYear !== undefined || maxYear !== undefined
-      ? {
-          year: {
-            ...(minYear !== undefined && { gte: parseInt(minYear) }),
-            ...(maxYear !== undefined && { lte: parseInt(maxYear) }),
-          },
-        }
-      : {};
-  const mileageFilter =
-    minMileage !== undefined || maxMileage !== undefined
-      ? {
-          mileage: {
-            ...(minMileage !== undefined && { gte: parseInt(minMileage) }),
-            ...(maxMileage !== undefined && { lte: parseInt(maxMileage) }),
-          },
-        }
-      : {};
-  const engineFilter =
-    minEngine !== undefined || maxEngine !== undefined
-      ? {
-          engine: {
-            ...(minEngine !== undefined && { gte: parseInt(minEngine) }),
-            ...(maxEngine !== undefined && { lte: parseInt(maxEngine) }),
-          },
-        }
-      : {};
+  const where: Prisma.VehicleWhereInput = {};
 
-  const where = {
-    ...cityFilter,
-    ...countryFilter,
-    ...makeFilter,
-    ...modelFilter,
-    ...lotFilter,
-    ...typeFilter,
-    ...statusFilter,
-    ...transmissionFilter,
-    ...conditionFilter,
-    ...fuelTypeFilter,
-    ...featuredFilter,
-    ...priceFilter,
-    ...yearFilter,
-    ...mileageFilter,
-    ...engineFilter,
-  };
+  if (cityName || countryName) {
+    where.city = {
+      ...(cityName && { name: { contains: cityName, mode: "insensitive" } }),
+      ...(countryName && { country: { name: { contains: countryName, mode: "insensitive" } } }),
+    };
+  }
+  if (makeName) where.make = { name: { contains: makeName, mode: "insensitive" } };
+  if (modelName) where.model = { name: { contains: modelName, mode: "insensitive" } };
+  if (lotNumber) where.lot = lotNumber;
+  if (typeName) where.type = { name: { contains: typeName, mode: "insensitive" } };
+  if (status) where.status = status;
+  if (transmission) where.transmission = transmission as Prisma.EnumTransmissionFilter<"Vehicle">;
+  if (condition) where.condition = condition as Prisma.EnumVehicleConditionFilter<"Vehicle">;
+  if (fuelType) where.fuelType = fuelType as Prisma.EnumFuelTypeFilter<"Vehicle">;
+  if (featured) where.isFeatured = featured === "true";
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    where.price = {
+      ...(minPrice !== undefined && { gte: parseFloat(minPrice) }),
+      ...(maxPrice !== undefined && { lte: parseFloat(maxPrice) }),
+    };
+  }
+  if (minYear !== undefined || maxYear !== undefined) {
+    where.year = {
+      ...(minYear !== undefined && { gte: parseInt(minYear) }),
+      ...(maxYear !== undefined && { lte: parseInt(maxYear) }),
+    };
+  }
+  if (minMileage !== undefined || maxMileage !== undefined) {
+    where.mileage = {
+      ...(minMileage !== undefined && { gte: parseInt(minMileage) }),
+      ...(maxMileage !== undefined && { lte: parseInt(maxMileage) }),
+    };
+  }
+  if (minEngine !== undefined || maxEngine !== undefined) {
+    where.engine = {
+      ...(minEngine !== undefined && { gte: parseInt(minEngine) }),
+      ...(maxEngine !== undefined && { lte: parseInt(maxEngine) }),
+    };
+  }
 
-  const VALID_SORT_FIELDS = ["year", "price", "mileage", "engine", "views", "priority", "lot"];
+  const VALID_SORT_FIELDS = ["year", "price", "mileage", "engine", "views", "priority", "lot"] as const;
+  type SortField = typeof VALID_SORT_FIELDS[number];
   const order = sortOrder === "desc" ? "desc" : "asc";
-  const customSort =
-    sortBy && VALID_SORT_FIELDS.includes(sortBy)
-      ? { [sortBy]: order as "asc" | "desc" }
+  const customSort: Prisma.VehicleOrderByWithRelationInput | null =
+    sortBy && (VALID_SORT_FIELDS as readonly string[]).includes(sortBy)
+      ? { [sortBy as SortField]: order }
       : null;
 
   const [featuredCount, totalItems] = await Promise.all([
