@@ -212,11 +212,11 @@ export const getAllAdminsVehiclesService = async ({
 
   let rawVehicles;
 
-  if (customSort) {
+  if (customSort || where.isFeatured !== undefined) {
     rawVehicles = await prisma.vehicle.findMany({
       where,
       include,
-      orderBy: customSort,
+      ...(customSort && { orderBy: customSort }),
       skip,
       take: limit,
     });
