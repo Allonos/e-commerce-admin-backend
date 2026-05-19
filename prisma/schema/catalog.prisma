@@ -1,0 +1,20 @@
+model Make {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  models   Model[]
+  vehicles Vehicle[]
+}
+
+model Model {
+  id       String    @id @default(uuid())
+  name     String
+  makeId   String
+  make     Make      @relation(fields: [makeId], references: [id])
+  vehicles Vehicle[]
+}
+
+model Type {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  vehicles Vehicle[]
+}

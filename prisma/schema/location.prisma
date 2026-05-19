@@ -1,0 +1,13 @@
+model Country {
+  id     String @id @default(uuid())
+  name   String @unique
+  cities City[]
+}
+
+model City {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  countryId String
+  country   Country   @relation(fields: [countryId], references: [id])
+  vehicles  Vehicle[]
+}
