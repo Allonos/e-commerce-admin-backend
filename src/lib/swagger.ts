@@ -20,9 +20,16 @@ const options: swaggerJsdoc.Options = {
         User: {
           type: "object",
           properties: {
-            id: { type: "string" },
+            id: { type: "string", format: "uuid" },
             username: { type: "string" },
-            email: { type: "string" },
+            email: { type: "string", format: "email" },
+            role: { type: "string", enum: ["USER", "DEALER", "ADMIN"] },
+            adminRole: { type: "string", enum: ["MAIN", "CONTENT"], nullable: true },
+            isBanned: { type: "boolean", default: false },
+            bannedAt: { type: "string", format: "date-time", nullable: true },
+            bannedReason: { type: "string", nullable: true },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
           },
         },
         Vehicle: {

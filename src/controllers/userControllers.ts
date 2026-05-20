@@ -1,9 +1,18 @@
 import { Request, Response } from "express";
 import { generateToken } from "../lib/utils";
 import {
+  banUserService,
+  changeAdminRoleService,
+  changeUserRoleService,
   createUser as createUserService,
+  deleteUserService,
+  getAllusersService,
   loginUser as loginUserService,
+  unbanUserService,
 } from "../services/userServices";
+import prisma from "../lib/prisma";
+import { parsePagination } from "../lib/pagination";
+import { AuthRequest } from "../middleware/protectRoute";
 
 export const createUser = async (req: Request, res: Response) => {
   try {
@@ -68,6 +77,157 @@ export const logoutUser = async (req: Request, res: Response) => {
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.error("Error logging out user:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const { limit, skip } = parsePagination(req.query);
+
+    const username = req.query.username as string | undefined;
+    const role = req.query.role as string | undefined;
+    const isBanned = req.query.isBanned as string | undefined;
+
+    const { users, totalUsers } = await getAllusersService({
+      limit,
+      skip,
+      username,
+      role,
+      isBanned,
+    });
+
+    const { page, totalPages, hasNextPage, isFirstPage, isLastPage } =
+      parsePagination(req.query, undefined, totalUsers);
+
+    res.status(200).json({
+      users,
+      totalUsers,
+      page,
+      totalPages,
+      hasNextPage,
+      isFirstPage,
+      isLastPage,
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const changeUserRole = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { userId } = req.params as { userId: string };
+    const { role } = req.body;
+
+    const updatedUser = await changeUserRoleService(req.user.id, userId, role);
+
+    res.status(200).json({ user: updatedUser });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Forbidden") {
+      return res
+        .status(403)
+        .json({ error: "You are forbidden from performing this action" });
+    }
+    console.error("Error changing user role:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const changeAdminRole = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { userId } = req.params as { userId: string };
+    const { newAdminRole } = req.body;
+
+    const updatedUser = await changeAdminRoleService(
+      req.user.id,
+      userId,
+      newAdminRole,
+    );
+
+    res.status(200).json({ user: updatedUser });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Forbidden") {
+      return res
+        .status(403)
+        .json({ error: "You are forbidden from performing this action" });
+    }
+    console.error("Error changing admin role:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const banUser = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { userId } = req.params as { userId: string };
+    const { banReason } = req.body;
+
+    const bannedUser = await banUserService(req.user.id, userId, banReason);
+
+    res.status(200).json({ user: bannedUser });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Forbidden") {
+      return res
+        .status(403)
+        .json({ error: "You are forbidden from performing this action" });
+    }
+    console.error("Error banning user:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const cancelBanUser = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { userId } = req.params as { userId: string };
+
+    const unbannedUser = await unbanUserService(req.user.id, userId);
+
+    res.status(200).json({ user: unbannedUser });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Forbidden") {
+      return res
+        .status(403)
+        .json({ error: "You are forbidden from performing this action" });
+    }
+    console.error("Error unbanning user:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const deleteUser = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { userId } = req.params as { userId: string };
+
+    await deleteUserService(req.user.id, userId);
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Forbidden") {
+      return res
+        .status(403)
+        .json({ error: "You are forbidden from performing this action" });
+    }
+    console.error("Error deleting user:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
